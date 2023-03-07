@@ -15,3 +15,9 @@ This project uses [poetry]() to manage dependencies and [virtualenv]() to manage
 ```
 scrapy crawl wikipedia -L WARN
 ```
+
+### Test
+
+```sh
+pytest || echo "Tests failed"
+```

@@ -3,12 +3,15 @@ import scrapy
 
 from collections import defaultdict
 
+from urllib.parse import urldefrag
+
 
 class WikipediaSpider(scrapy.Spider):
     name = "wikipedia"
     allowed_domains = ["en.wikipedia.org"]
     start_urls = ["https://en.wikipedia.org/wiki/Functor"]
 
+    # TODO: Make these relative
     allowed_paths = [
         "https://en.wikipedia.org/wiki/*",
     ]
@@ -17,21 +20,41 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/*:*",
     ]
 
-    adjacency_matrix = defaultdict(set)
+    adjacency_matrix = defaultdict(dict)
 
     def parse(self, response, depth=0):
-        if self.should_ignore_path(response.url):
-            return None
+        current_url = response.url
 
-        if not self.should_allow_path(response.url):
-            return None
+        for url in self.get_outgoing_links(response):
+            if self.should_ignore_path(url):
+                yield
+                continue
 
-        print(f'{depth} - {response.url}')
+            if not self.should_allow_path(url):
+                yield
+                continue
+
+            print(f'({depth}) {url}')
+
+            self.adjacency_matrix[current_url][url] = True
+
+            yield scrapy.Request(url, lambda response: self.parse(response, depth+1),)
+
+    def get_outgoing_links(self, response):
+        urls = []
 
         for href in response.xpath('//a/@href').getall():
-            self.adjacency_matrix[href].add(href)
+            url = self.get_full_url(response, href)
+            urls.append(url)
 
-            yield scrapy.Request(response.urljoin(href), lambda response: self.parse(response, depth+1),)
+        unique_urls = list(set(urls))
+
+        return unique_urls
+
+    def get_full_url(self, response, href):
+        url = response.urljoin(href)
+        unfragmented = urldefrag(url)[0]  # remove anchors, etc
+        return unfragmented
 
     def should_ignore_path(self, path):
         return self.filter_paths_by_pattern(path, self.ignore_paths)
@@ -41,7 +64,7 @@ class WikipediaSpider(scrapy.Spider):
 
     def filter_paths_by_pattern(self, path, patterns):
         for pattern in patterns:
-            regular_expression = re.escape(pattern)
+            regular_expression = self.wildcard_to_regular_expression(pattern)
             if re.match(regular_expression, path):
                 return True
 
@@ -49,8 +72,3 @@ class WikipediaSpider(scrapy.Spider):
 
     def wildcard_to_regular_expression(self, path):
         return re.escape(path).replace('\*', '.+')
-
-
-def test_wildcard_to_regular_expression():
-    spider = WikipediaSpider('wikipedia')
-    assert spider.wildcard_to_regular_expression('abc*') == 'abc.+'
