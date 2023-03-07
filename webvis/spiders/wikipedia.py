@@ -5,11 +5,15 @@ from collections import defaultdict
 
 from urllib.parse import urldefrag
 
+from pyvis.network import Network
+
 
 class WikipediaSpider(scrapy.Spider):
     name = "wikipedia"
     allowed_domains = ["en.wikipedia.org"]
     start_urls = ["https://en.wikipedia.org/wiki/Functor"]
+
+    max_depth = 1
 
     # TODO: Make these relative
     allowed_paths = [
@@ -20,10 +24,15 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/*:*",
     ]
 
-    adjacency_matrix = defaultdict(dict)
+    network = Network()
 
     def parse(self, response, depth=0):
+        if depth >= self.max_depth:
+            return
+
         current_url = response.url
+
+        self.network.add_node(current_url)
 
         for url in self.get_outgoing_links(response):
             if self.should_ignore_path(url):
@@ -36,9 +45,16 @@ class WikipediaSpider(scrapy.Spider):
 
             print(f'({depth}) {url}')
 
-            self.adjacency_matrix[current_url][url] = True
+            self.network.add_node(url)
+            self.network.add_edge(current_url, url)
 
             yield scrapy.Request(url, lambda response: self.parse(response, depth+1),)
+
+        if depth == 0:
+            print('done')
+            print(self.network)
+            self.network.toggle_physics(True)
+            self.network.show('graph.html', notebook=False)
 
     def get_outgoing_links(self, response):
         urls = []
