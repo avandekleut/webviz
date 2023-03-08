@@ -6,7 +6,7 @@ VIRTUALENV_NAME=local
 
 curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
 
-brew install python@$PYTHON_VERSION poetry
+brew install python@$PYTHON_VERSION poetry graphviz
 
 virtualenv $VIRTUALENV_NAME --python=$PYTHON_VERSION
 
