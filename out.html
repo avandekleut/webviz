@@ -1,0 +1,250 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 600px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 100%;
+                 height: 600px;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": "Functor", "label": "Functor", "shape": "dot"}, {"color": "#97c2fc", "id": "\u221e-groupoid", "label": "\u221e-groupoid", "shape": "dot"}, {"color": "#97c2fc", "id": "\u221e-topos", "label": "\u221e-topos", "shape": "dot"}, {"color": "#97c2fc", "id": "1-forms", "label": "1-forms", "shape": "dot"}, {"color": "#97c2fc", "id": "\u221e-category", "label": "\u221e-category", "shape": "dot"}, {"color": "#97c2fc", "id": "2-functor", "label": "2-functor", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9lie_Cartan", "label": "\u00c9lie_Cartan", "shape": "dot"}, {"color": "#97c2fc", "id": "Abstract_index_notation", "label": "Abstract_index_notation", "shape": "dot"}, {"color": "#97c2fc", "id": "Adjoint_bundle", "label": "Adjoint_bundle", "shape": "dot"}, {"color": "#97c2fc", "id": "2-category", "label": "2-category", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Normale_Sup\u00e9rieure", "label": "\u00c9cole_Normale_Sup\u00e9rieure", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9mile_Picard", "label": "\u00c9mile_Picard", "shape": "dot"}, {"color": "#97c2fc", "id": "Algebraic_topology", "label": "Algebraic_topology", "shape": "dot"}, {"color": "#97c2fc", "id": "Adjoint_representation", "label": "Adjoint_representation", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_bundle", "label": "Affine_bundle", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_connection", "label": "Affine_connection", "shape": "dot"}, {"color": "#97c2fc", "id": "Abner_Shimony", "label": "Abner_Shimony", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers", "label": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Centrale_Paris", "label": "\u00c9cole_Centrale_Paris", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Freudienne_de_Paris", "label": "\u00c9cole_Freudienne_de_Paris", "shape": "dot"}, {"color": "#97c2fc", "id": "\u010cech_cohomology", "label": "\u010cech_cohomology", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_normale_sup\u00e9rieure_(Paris)", "label": "\u00c9cole_normale_sup\u00e9rieure_(Paris)", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9mile_Augier", "label": "\u00c9mile_Augier", "shape": "dot"}, {"color": "#97c2fc", "id": "Abelian_group", "label": "Abelian_group", "shape": "dot"}, {"color": "#97c2fc", "id": "Abstract_algebra", "label": "Abstract_algebra", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_group", "label": "Affine_group", "shape": "dot"}, {"color": "#97c2fc", "id": "Anthropologist", "label": "Anthropologist", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00dclo_Lumiste", "label": "\u00dclo_Lumiste", "shape": "dot"}, {"color": "#97c2fc", "id": "Absolute_parallelism", "label": "Absolute_parallelism", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_space", "label": "Affine_space", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_transformation", "label": "Affine_transformation", "shape": "dot"}, {"color": "#97c2fc", "id": "Bell\u0027s_theorem", "label": "Bell\u0027s_theorem", "shape": "dot"}, {"color": "#97c2fc", "id": "Bell_inequality", "label": "Bell_inequality", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Hassania_des_travaux_publics", "label": "\u00c9cole_Hassania_des_travaux_publics", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Nationale_Sup\u00e9rieure_Agronomique_de_Toulouse", "label": "\u00c9cole_Nationale_Sup\u00e9rieure_Agronomique_de_Toulouse", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Nationale_Sup\u00e9rieure_de_G\u00e9ologie", "label": "\u00c9cole_Nationale_Sup\u00e9rieure_de_G\u00e9ologie", "shape": "dot"}, {"color": "#97c2fc", "id": "Cosi_e_(se_vi_pare)", "label": "Cosi_e_(se_vi_pare)", "shape": "dot"}, {"color": "#97c2fc", "id": "David_Macey", "label": "David_Macey", "shape": "dot"}, {"color": "#97c2fc", "id": "Doi_(identifier)", "label": "Doi_(identifier)", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Centrale_de_Lille", "label": "\u00c9cole_Centrale_de_Lille", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Centrale_de_Lyon", "label": "\u00c9cole_Centrale_de_Lyon", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9tale_topology", "label": "\u00c9tale_topology", "shape": "dot"}, {"color": "#97c2fc", "id": "Academy", "label": "Academy", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_Coxeter_group", "label": "Affine_Coxeter_group", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_scheme", "label": "Affine_scheme", "shape": "dot"}, {"color": "#97c2fc", "id": "Ageing", "label": "Ageing", "shape": "dot"}, {"color": "#97c2fc", "id": "Alfred_Radcliffe-Brown", "label": "Alfred_Radcliffe-Brown", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_coordinate_system", "label": "Affine_coordinate_system", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_plane", "label": "Affine_plane", "shape": "dot"}, {"color": "#97c2fc", "id": "Abraham_Fraenkel", "label": "Abraham_Fraenkel", "shape": "dot"}, {"color": "#97c2fc", "id": "Abstrakt_Algebra", "label": "Abstrakt_Algebra", "shape": "dot"}, {"color": "#97c2fc", "id": "2.5D", "label": "2.5D", "shape": "dot"}, {"color": "#97c2fc", "id": "3-manifold", "label": "3-manifold", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9tale_cohomology", "label": "\u00c9tale_cohomology", "shape": "dot"}, {"color": "#97c2fc", "id": "2D_computer_graphics", "label": "2D_computer_graphics", "shape": "dot"}, {"color": "#97c2fc", "id": "3D_computer_graphics", "label": "3D_computer_graphics", "shape": "dot"}, {"color": "#97c2fc", "id": "Additive_group", "label": "Additive_group", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_algebraic_set", "label": "Affine_algebraic_set", "shape": "dot"}, {"color": "#97c2fc", "id": "Adiabatic_quantum_computation", "label": "Adiabatic_quantum_computation", "shape": "dot"}, {"color": "#97c2fc", "id": "Alain_Aspect", "label": "Alain_Aspect", "shape": "dot"}, {"color": "#97c2fc", "id": "Differential_geometry", "label": "Differential_geometry", "shape": "dot"}, {"color": "#97c2fc", "id": "Abelian_category", "label": "Abelian_category", "shape": "dot"}, {"color": "#97c2fc", "id": "Estonia", "label": "Estonia", "shape": "dot"}, {"color": "#97c2fc", "id": "Estonian_Academy_of_Sciences", "label": "Estonian_Academy_of_Sciences", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Nationale_Sup\u00e9rieure_d\u0027\u00c9lectronique,_d\u0027\u00c9lectrotechnique,_d\u0027Informatique,_d\u0027Hydraulique_et_des_T\u00e9l\u00e9communications", "label": "\u00c9cole_Nationale_Sup\u00e9rieure_d\u0027\u00c9lectronique,_d\u0027\u00c9lectrotechnique,_d\u0027Informatique,_d\u0027Hydraulique_et_des_T\u00e9l\u00e9communications", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Hassania_des_Travaux_Publics", "label": "\u00c9cole_Hassania_des_Travaux_Publics", "shape": "dot"}, {"color": "#97c2fc", "id": "Abelian_variety", "label": "Abelian_variety", "shape": "dot"}, {"color": "#97c2fc", "id": "Abelianization", "label": "Abelianization", "shape": "dot"}, {"color": "#97c2fc", "id": "Acad\u00e9mie_fran\u00e7aise", "label": "Acad\u00e9mie_fran\u00e7aise", "shape": "dot"}, {"color": "#97c2fc", "id": "Alexandre_Dumas,_fils", "label": "Alexandre_Dumas,_fils", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c5bo_Akademi", "label": "\u00c5bo_Akademi", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Militaire", "label": "\u00c9cole_Militaire", "shape": "dot"}, {"color": "#97c2fc", "id": ".edu", "label": ".edu", "shape": "dot"}, {"color": "#97c2fc", "id": "110_film", "label": "110_film", "shape": "dot"}, {"color": "#97c2fc", "id": "126_film", "label": "126_film", "shape": "dot"}, {"color": "#97c2fc", "id": "135_film", "label": "135_film", "shape": "dot"}, {"color": "#97c2fc", "id": "Abdelmalek_Sayad", "label": "Abdelmalek_Sayad", "shape": "dot"}, {"color": "#97c2fc", "id": "Alain_Touraine", "label": "Alain_Touraine", "shape": "dot"}, {"color": "#97c2fc", "id": "Alan_Sheridan", "label": "Alan_Sheridan", "shape": "dot"}, {"color": "#97c2fc", "id": "10-cube", "label": "10-cube", "shape": "dot"}, {"color": "#97c2fc", "id": "10-demicube", "label": "10-demicube", "shape": "dot"}, {"color": "#97c2fc", "id": "10-orthoplex", "label": "10-orthoplex", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9tale_morphism", "label": "\u00c9tale_morphism", "shape": "dot"}, {"color": "#97c2fc", "id": "\u2113-adic_sheaf", "label": "\u2113-adic_sheaf", "shape": "dot"}, {"color": "#97c2fc", "id": "Candlemass_(band)", "label": "Candlemass_(band)", "shape": "dot"}, {"color": "#97c2fc", "id": "Dactylis_Glomerata", "label": "Dactylis_Glomerata", "shape": "dot"}, {"color": "#97c2fc", "id": "Doom_metal", "label": "Doom_metal", "shape": "dot"}, {"color": "#97c2fc", "id": "Abraham_Robinson", "label": "Abraham_Robinson", "shape": "dot"}, {"color": "#97c2fc", "id": "Algebra", "label": "Algebra", "shape": "dot"}, {"color": "#97c2fc", "id": "Almost", "label": "Almost", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_plane_(incidence_geometry)", "label": "Affine_plane_(incidence_geometry)", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9tale_spectrum", "label": "\u00c9tale_spectrum", "shape": "dot"}, {"color": "#97c2fc", "id": "Algebra_representation", "label": "Algebra_representation", "shape": "dot"}, {"color": "#97c2fc", "id": "Algebraic_Geometry_(book)", "label": "Algebraic_Geometry_(book)", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9mile_Durkheim", "label": "\u00c9mile_Durkheim", "shape": "dot"}, {"color": "#97c2fc", "id": "Actor\u2013network_theory", "label": "Actor\u2013network_theory", "shape": "dot"}, {"color": "#97c2fc", "id": "Aerial_archaeology", "label": "Aerial_archaeology", "shape": "dot"}, {"color": "#97c2fc", "id": "8-Oxo-2\u0027-deoxyguanosine", "label": "8-Oxo-2\u0027-deoxyguanosine", "shape": "dot"}, {"color": "#97c2fc", "id": "AMP-activated_protein_kinase", "label": "AMP-activated_protein_kinase", "shape": "dot"}, {"color": "#97c2fc", "id": "Acheta_domesticus", "label": "Acheta_domesticus", "shape": "dot"}, {"color": "#97c2fc", "id": "2.5D_(disambiguation)", "label": "2.5D_(disambiguation)", "shape": "dot"}, {"color": "#97c2fc", "id": "2-sided", "label": "2-sided", "shape": "dot"}, {"color": "#97c2fc", "id": "3-ball", "label": "3-ball", "shape": "dot"}, {"color": "#97c2fc", "id": "3-sphere", "label": "3-sphere", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Normale_Sup\u00e9rieure_de_Cachan", "label": "\u00c9cole_Normale_Sup\u00e9rieure_de_Cachan", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_Polytechnique", "label": "\u00c9cole_Polytechnique", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c9cole_sup\u00e9rieure_d\u0027optique", "label": "\u00c9cole_sup\u00e9rieure_d\u0027optique", "shape": "dot"}, {"color": "#97c2fc", "id": "Adiabatic_theorem", "label": "Adiabatic_theorem", "shape": "dot"}, {"color": "#97c2fc", "id": "Amplitude_amplification", "label": "Amplitude_amplification", "shape": "dot"}, {"color": "#97c2fc", "id": "ArXiv_(identifier)", "label": "ArXiv_(identifier)", "shape": "dot"}, {"color": "#97c2fc", "id": "Affine_subspace", "label": "Affine_subspace", "shape": "dot"}, {"color": "#97c2fc", "id": "Field_(mathematics)", "label": "Field_(mathematics)", "shape": "dot"}, {"color": "#97c2fc", "id": "Group_(mathematics)", "label": "Group_(mathematics)", "shape": "dot"}, {"color": "#97c2fc", "id": "2D_image", "label": "2D_image", "shape": "dot"}, {"color": "#97c2fc", "id": "16-bit_computing", "label": "16-bit_computing", "shape": "dot"}, {"color": "#97c2fc", "id": "2D_geometric_model", "label": "2D_geometric_model", "shape": "dot"}, {"color": "#97c2fc", "id": "0_(number)", "label": "0_(number)", "shape": "dot"}, {"color": "#97c2fc", "id": "AB5_category", "label": "AB5_category", "shape": "dot"}, {"color": "#97c2fc", "id": "Absolute_differential_calculus", "label": "Absolute_differential_calculus", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00d5llesummer", "label": "\u00d5llesummer", "shape": "dot"}, {"color": "#97c2fc", "id": "A._Le_Coq_Arena", "label": "A._Le_Coq_Arena", "shape": "dot"}, {"color": "#97c2fc", "id": "Acad\u00e9mie_des_sciences,_des_arts,_des_cultures_d\u0027Afrique_et_des_diasporas_africaines", "label": "Acad\u00e9mie_des_sciences,_des_arts,_des_cultures_d\u0027Afrique_et_des_diasporas_africaines", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c4mari_Air_Base", "label": "\u00c4mari_Air_Base", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c5land", "label": "\u00c5land", "shape": "dot"}, {"color": "#97c2fc", "id": "\u00c5land_convention", "label": "\u00c5land_convention", "shape": "dot"}]);
+                  edges = new vis.DataSet([{"from": "Functor", "to": "\u221e-groupoid"}, {"from": "Functor", "to": "\u221e-topos"}, {"from": "Functor", "to": "1-forms"}, {"from": "\u221e-groupoid", "to": "\u221e-category"}, {"from": "\u221e-groupoid", "to": "\u221e-topos"}, {"from": "\u221e-groupoid", "to": "2-functor"}, {"from": "1-forms", "to": "\u00c9lie_Cartan"}, {"from": "1-forms", "to": "Abstract_index_notation"}, {"from": "1-forms", "to": "Adjoint_bundle"}, {"from": "\u221e-topos", "to": "\u221e-category"}, {"from": "\u221e-topos", "to": "2-functor"}, {"from": "\u221e-category", "to": "2-functor"}, {"from": "2-functor", "to": "2-category"}, {"from": "\u00c9lie_Cartan", "to": "\u00c9cole_Normale_Sup\u00e9rieure"}, {"from": "\u00c9lie_Cartan", "to": "\u00c9mile_Picard"}, {"from": "\u00c9lie_Cartan", "to": "Algebraic_topology"}, {"from": "Adjoint_bundle", "to": "Adjoint_representation"}, {"from": "Adjoint_bundle", "to": "Affine_bundle"}, {"from": "Adjoint_bundle", "to": "Affine_connection"}, {"from": "Abstract_index_notation", "to": "\u00c9lie_Cartan"}, {"from": "Abstract_index_notation", "to": "Abner_Shimony"}, {"from": "Abstract_index_notation", "to": "Affine_connection"}, {"from": "2-category", "to": "\u221e-groupoid"}, {"from": "2-category", "to": "\u221e-topos"}, {"from": "\u00c9cole_Normale_Sup\u00e9rieure", "to": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers"}, {"from": "\u00c9cole_Normale_Sup\u00e9rieure", "to": "\u00c9cole_Centrale_Paris"}, {"from": "\u00c9cole_Normale_Sup\u00e9rieure", "to": "\u00c9cole_Freudienne_de_Paris"}, {"from": "\u00c9mile_Picard", "to": "\u00c9cole_Centrale_Paris"}, {"from": "Algebraic_topology", "to": "\u010cech_cohomology"}, {"from": "\u00c9mile_Picard", "to": "\u00c9cole_normale_sup\u00e9rieure_(Paris)"}, {"from": "\u00c9mile_Picard", "to": "\u00c9mile_Augier"}, {"from": "Algebraic_topology", "to": "Abelian_group"}, {"from": "Algebraic_topology", "to": "Abstract_algebra"}, {"from": "Affine_connection", "to": "\u00c9lie_Cartan"}, {"from": "Affine_bundle", "to": "Affine_group"}, {"from": "Abner_Shimony", "to": "Anthropologist"}, {"from": "Affine_connection", "to": "\u00dclo_Lumiste"}, {"from": "Affine_connection", "to": "Absolute_parallelism"}, {"from": "Affine_bundle", "to": "Affine_space"}, {"from": "Affine_bundle", "to": "Affine_transformation"}, {"from": "Abner_Shimony", "to": "Bell\u0027s_theorem"}, {"from": "Abner_Shimony", "to": "Bell_inequality"}, {"from": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers", "to": "\u00c9cole_Hassania_des_travaux_publics"}, {"from": "Adjoint_representation", "to": "\u00c9lie_Cartan"}, {"from": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers", "to": "\u00c9cole_Nationale_Sup\u00e9rieure_Agronomique_de_Toulouse"}, {"from": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers", "to": "\u00c9cole_Nationale_Sup\u00e9rieure_de_G\u00e9ologie"}, {"from": "Adjoint_representation", "to": "Abelian_group"}, {"from": "\u00c9cole_Freudienne_de_Paris", "to": "Cosi_e_(se_vi_pare)"}, {"from": "\u00c9cole_Centrale_Paris", "to": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers"}, {"from": "\u00c9cole_Freudienne_de_Paris", "to": "David_Macey"}, {"from": "\u00c9cole_Freudienne_de_Paris", "to": "Doi_(identifier)"}, {"from": "\u00c9cole_Centrale_Paris", "to": "\u00c9cole_Centrale_de_Lille"}, {"from": "\u00c9cole_Centrale_Paris", "to": "\u00c9cole_Centrale_de_Lyon"}, {"from": "\u010cech_cohomology", "to": "\u00c9tale_topology"}, {"from": "Anthropologist", "to": "Academy"}, {"from": "Affine_group", "to": "Affine_Coxeter_group"}, {"from": "Abstract_algebra", "to": "Abelian_group"}, {"from": "\u010cech_cohomology", "to": "Abelian_group"}, {"from": "\u010cech_cohomology", "to": "Affine_scheme"}, {"from": "Anthropologist", "to": "Ageing"}, {"from": "Anthropologist", "to": "Alfred_Radcliffe-Brown"}, {"from": "Affine_group", "to": "Affine_coordinate_system"}, {"from": "Affine_group", "to": "Affine_plane"}, {"from": "Abstract_algebra", "to": "Abraham_Fraenkel"}, {"from": "Abstract_algebra", "to": "Abstrakt_Algebra"}, {"from": "Affine_transformation", "to": "2.5D"}, {"from": "Absolute_parallelism", "to": "3-manifold"}, {"from": "Affine_space", "to": "\u00c9tale_cohomology"}, {"from": "Affine_transformation", "to": "2D_computer_graphics"}, {"from": "Affine_transformation", "to": "3D_computer_graphics"}, {"from": "Absolute_parallelism", "to": "Adjoint_bundle"}, {"from": "Absolute_parallelism", "to": "Affine_bundle"}, {"from": "Affine_space", "to": "Additive_group"}, {"from": "Affine_space", "to": "Affine_algebraic_set"}, {"from": "Bell\u0027s_theorem", "to": "Adiabatic_quantum_computation"}, {"from": "Bell\u0027s_theorem", "to": "Alain_Aspect"}, {"from": "\u00dclo_Lumiste", "to": "Differential_geometry"}, {"from": "Abelian_group", "to": "Abelian_category"}, {"from": "\u00c9cole_normale_sup\u00e9rieure_(Paris)", "to": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers"}, {"from": "\u00dclo_Lumiste", "to": "Estonia"}, {"from": "\u00dclo_Lumiste", "to": "Estonian_Academy_of_Sciences"}, {"from": "\u00c9cole_Nationale_Sup\u00e9rieure_Agronomique_de_Toulouse", "to": "\u00c9cole_Hassania_des_travaux_publics"}, {"from": "\u00c9cole_Nationale_Sup\u00e9rieure_Agronomique_de_Toulouse", "to": "\u00c9cole_Nationale_Sup\u00e9rieure_d\u0027\u00c9lectronique,_d\u0027\u00c9lectrotechnique,_d\u0027Informatique,_d\u0027Hydraulique_et_des_T\u00e9l\u00e9communications"}, {"from": "\u00c9cole_Hassania_des_travaux_publics", "to": "\u00c9cole_Hassania_des_Travaux_Publics"}, {"from": "\u00c9cole_Nationale_Sup\u00e9rieure_de_G\u00e9ologie", "to": "\u00c9cole_Hassania_des_travaux_publics"}, {"from": "\u00c9cole_Nationale_Sup\u00e9rieure_de_G\u00e9ologie", "to": "\u00c9cole_Nationale_Sup\u00e9rieure_Agronomique_de_Toulouse"}, {"from": "Abelian_group", "to": "Abelian_variety"}, {"from": "Abelian_group", "to": "Abelianization"}, {"from": "\u00c9mile_Augier", "to": "Acad\u00e9mie_fran\u00e7aise"}, {"from": "\u00c9mile_Augier", "to": "Alexandre_Dumas,_fils"}, {"from": "Bell_inequality", "to": "Adiabatic_quantum_computation"}, {"from": "Bell_inequality", "to": "Alain_Aspect"}, {"from": "\u00c9cole_normale_sup\u00e9rieure_(Paris)", "to": "\u00c9cole_Centrale_Paris"}, {"from": "\u00c9cole_normale_sup\u00e9rieure_(Paris)", "to": "\u00c9cole_Freudienne_de_Paris"}, {"from": "\u00c9cole_Centrale_de_Lyon", "to": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers"}, {"from": "\u00c9cole_Centrale_de_Lyon", "to": "\u00c9cole_Hassania_des_travaux_publics"}, {"from": "Academy", "to": "\u00c5bo_Akademi"}, {"from": "Academy", "to": "\u00c9cole_Militaire"}, {"from": "Academy", "to": ".edu"}, {"from": "\u00c9cole_Centrale_de_Lille", "to": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers"}, {"from": "\u00c9cole_Centrale_de_Lille", "to": "\u00c9cole_Hassania_des_travaux_publics"}, {"from": "Doi_(identifier)", "to": "110_film"}, {"from": "Doi_(identifier)", "to": "126_film"}, {"from": "Doi_(identifier)", "to": "135_film"}, {"from": "David_Macey", "to": "Abdelmalek_Sayad"}, {"from": "David_Macey", "to": "Alain_Touraine"}, {"from": "David_Macey", "to": "Alan_Sheridan"}, {"from": "Affine_Coxeter_group", "to": "10-cube"}, {"from": "Affine_Coxeter_group", "to": "10-demicube"}, {"from": "Affine_Coxeter_group", "to": "10-orthoplex"}, {"from": "\u00c9tale_topology", "to": "\u00c9tale_cohomology"}, {"from": "\u00c9tale_topology", "to": "\u00c9tale_morphism"}, {"from": "\u00c9tale_topology", "to": "\u2113-adic_sheaf"}, {"from": "Abstrakt_Algebra", "to": "Candlemass_(band)"}, {"from": "Abstrakt_Algebra", "to": "Dactylis_Glomerata"}, {"from": "Abstrakt_Algebra", "to": "Doom_metal"}, {"from": "Abraham_Fraenkel", "to": "Abraham_Robinson"}, {"from": "Abraham_Fraenkel", "to": "Algebra"}, {"from": "Abraham_Fraenkel", "to": "Almost"}, {"from": "Affine_plane", "to": "Affine_coordinate_system"}, {"from": "Affine_plane", "to": "Affine_plane_(incidence_geometry)"}, {"from": "Affine_plane", "to": "Affine_space"}, {"from": "Affine_coordinate_system", "to": "\u00c9tale_cohomology"}, {"from": "Affine_coordinate_system", "to": "Additive_group"}, {"from": "Affine_coordinate_system", "to": "Affine_algebraic_set"}, {"from": "Affine_scheme", "to": "\u00c9tale_spectrum"}, {"from": "Affine_scheme", "to": "Algebra_representation"}, {"from": "Affine_scheme", "to": "Algebraic_Geometry_(book)"}, {"from": "Alfred_Radcliffe-Brown", "to": "\u00c9mile_Durkheim"}, {"from": "Alfred_Radcliffe-Brown", "to": "Actor\u2013network_theory"}, {"from": "Alfred_Radcliffe-Brown", "to": "Aerial_archaeology"}, {"from": "\u00c9tale_cohomology", "to": "\u00c9tale_morphism"}, {"from": "\u00c9tale_cohomology", "to": "Abelian_group"}, {"from": "\u00c9tale_cohomology", "to": "Abelian_variety"}, {"from": "Ageing", "to": "8-Oxo-2\u0027-deoxyguanosine"}, {"from": "Ageing", "to": "AMP-activated_protein_kinase"}, {"from": "Ageing", "to": "Acheta_domesticus"}, {"from": "2.5D", "to": "2.5D_(disambiguation)"}, {"from": "2.5D", "to": "2D_computer_graphics"}, {"from": "2.5D", "to": "3D_computer_graphics"}, {"from": "3-manifold", "to": "2-sided"}, {"from": "3-manifold", "to": "3-ball"}, {"from": "3-manifold", "to": "3-sphere"}, {"from": "Alain_Aspect", "to": "\u00c9cole_Normale_Sup\u00e9rieure_de_Cachan"}, {"from": "Alain_Aspect", "to": "\u00c9cole_Polytechnique"}, {"from": "Alain_Aspect", "to": "\u00c9cole_sup\u00e9rieure_d\u0027optique"}, {"from": "Adiabatic_quantum_computation", "to": "Adiabatic_theorem"}, {"from": "Adiabatic_quantum_computation", "to": "Amplitude_amplification"}, {"from": "Adiabatic_quantum_computation", "to": "ArXiv_(identifier)"}, {"from": "Affine_algebraic_set", "to": "Affine_scheme"}, {"from": "Affine_algebraic_set", "to": "Affine_subspace"}, {"from": "Additive_group", "to": "Abelian_group"}, {"from": "Additive_group", "to": "Field_(mathematics)"}, {"from": "Additive_group", "to": "Group_(mathematics)"}, {"from": "3D_computer_graphics", "to": "2D_computer_graphics"}, {"from": "3D_computer_graphics", "to": "2D_image"}, {"from": "2D_computer_graphics", "to": "16-bit_computing"}, {"from": "2D_computer_graphics", "to": "2D_geometric_model"}, {"from": "Abelian_category", "to": "0_(number)"}, {"from": "Abelian_category", "to": "AB5_category"}, {"from": "Differential_geometry", "to": "\u00c9lie_Cartan"}, {"from": "Differential_geometry", "to": "Absolute_differential_calculus"}, {"from": "Differential_geometry", "to": "Abstract_algebra"}, {"from": "\u00c9cole_Hassania_des_Travaux_Publics", "to": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers"}, {"from": "\u00c9cole_Hassania_des_Travaux_Publics", "to": "\u00c9cole_Nationale_Sup\u00e9rieure_Agronomique_de_Toulouse"}, {"from": "\u00c9cole_Nationale_Sup\u00e9rieure_d\u0027\u00c9lectronique,_d\u0027\u00c9lectrotechnique,_d\u0027Informatique,_d\u0027Hydraulique_et_des_T\u00e9l\u00e9communications", "to": "\u00c9cole_Catholique_des_Arts_et_M\u00e9tiers"}, {"from": "\u00c9cole_Nationale_Sup\u00e9rieure_d\u0027\u00c9lectronique,_d\u0027\u00c9lectrotechnique,_d\u0027Informatique,_d\u0027Hydraulique_et_des_T\u00e9l\u00e9communications", "to": "\u00c9cole_Hassania_des_travaux_publics"}, {"from": "Estonian_Academy_of_Sciences", "to": "\u00d5llesummer"}, {"from": "Estonian_Academy_of_Sciences", "to": "A._Le_Coq_Arena"}, {"from": "Estonian_Academy_of_Sciences", "to": "Acad\u00e9mie_des_sciences,_des_arts,_des_cultures_d\u0027Afrique_et_des_diasporas_africaines"}, {"from": "Estonia", "to": "\u00c4mari_Air_Base"}, {"from": "Estonia", "to": "\u00c5land"}, {"from": "Estonia", "to": "\u00c5land_convention"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

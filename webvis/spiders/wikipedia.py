@@ -26,7 +26,7 @@ class WikipediaSpider(scrapy.Spider):
 
     net = Network()
 
-    max_children = 50
+    max_children = 3
 
     limit = 100
 
@@ -38,11 +38,9 @@ class WikipediaSpider(scrapy.Spider):
         soup = BeautifulSoup(response.text, 'lxml')
         title_class = "mw-page-title-main"
         title = soup.find_all("span", {"class": title_class})[0].getText()
-        # print(f'title: {title}')
 
         parent_title = meta.get('parent_title')
         parent_title = parent_title or None
-        # print(f'parent_title: {parent_title}')
 
         current_url = response.url
 
@@ -55,30 +53,22 @@ class WikipediaSpider(scrapy.Spider):
         max_visit_count = self.max_children if self.max_children is not None else len(
             outgoing_links)
 
-        # print(f'max_visit_count: {max_visit_count}')
-
         visited_count = 0
         for url in outgoing_links:
             if visited_count >= max_visit_count:
-                # print(f'cutoff at {visited_count} >= {max_visit_count}')
                 break
 
             if url == current_url:
-                # print('same url')
                 continue
 
             if self.should_ignore_path(url):
-                # print(f'ignored url: {url}')
                 continue
 
             if not self.should_allow_path(url):
-                # print(f'url not allowed: {url}')
                 continue
 
             visited_count += 1
             self.limit -= 1
-            # print(
-            #     f'[{visited_count}/{max_visit_count}] ({self.limit}) {title} -> {url}')
 
             dest_path = url.split("/wiki/")[-1]
             dest_node = urllib.parse.unquote(
@@ -90,6 +80,9 @@ class WikipediaSpider(scrapy.Spider):
             if self.limit > 0:
                 print(f'yielding with limit {self.limit}')
                 yield scrapy.Request(url, callback=self.parse, meta={"parent_title": title})
+            else:
+                print('done')
+                self.net.show('out.html')
 
     def get_outgoing_links(self, response):
         urls = []
