@@ -15,8 +15,7 @@ class WikipediaSpider(scrapy.Spider):
     allowed_domains = ["en.wikipedia.org"]
     start_urls = ["https://en.wikipedia.org/wiki/Functor"]
 
-    max_depth = 1
-    max_children = 1
+    max_children = 3  # set to 3 for fun
 
     # TODO: Make these relative
     allowed_paths = [
@@ -30,6 +29,7 @@ class WikipediaSpider(scrapy.Spider):
     dot = graphviz.Digraph()
 
     total_visited = 0
+    max_total_visited = 16
 
     def parse(self, response, meta={}):
 
@@ -38,17 +38,9 @@ class WikipediaSpider(scrapy.Spider):
         title = soup.find_all("span", {"class": title_class})[0].getText()
         # print(f'title: {title}')
 
-        depth = meta.get('depth')
-        depth = depth or 0
-        # print(f'depth: {depth}')
-
         parent_title = meta.get('parent_title')
         parent_title = parent_title or None
         # print(f'parent_title: {parent_title}')
-
-        if depth >= self.max_depth:
-            # print(f'reached max depth of {depth}')
-            return
 
         current_url = response.url
 
@@ -64,6 +56,10 @@ class WikipediaSpider(scrapy.Spider):
                 print(f'cutoff at {visited_count} >= {max_visit_count}')
                 # yield
                 break
+            if self.total_visited >= self.max_total_visited:
+                print(
+                    f'hard cutoff at {self.total_visited} >= {self.max_total_visited}')
+                return
 
             if url == current_url:
                 print('same url')
@@ -82,7 +78,7 @@ class WikipediaSpider(scrapy.Spider):
             visited_count += 1
             self.total_visited += 1
             print(
-                f'({depth}) [{visited_count}/{max_visit_count}] {title} -> {url}')
+                f'[{visited_count}/{max_visit_count}] ({self.total_visited}) {title} -> {url}')
 
             current_path = current_url.split("/wiki/")[-1]
             source_node = urllib.parse.unquote(
@@ -93,13 +89,10 @@ class WikipediaSpider(scrapy.Spider):
                 dest_path, encoding='ascii', errors='replace')
             self.dot.edge(source_node, dest_node)
 
-            yield scrapy.Request(url, callback=self.parse, meta={'depth': depth+1, "parent_title": title})
+            yield scrapy.Request(url, callback=self.parse, meta={"parent_title": title})
 
-        if depth == 0:
-            print('done')
-            print(self.dot.source)
-            self.dot.render('dot.gv', view=True)
-            return
+        print(self.dot.source)
+        self.dot.render('dot.gv', view=True)
 
     def get_outgoing_links(self, response):
         urls = []
