@@ -1,13 +1,12 @@
 import re
 import scrapy
-
-from collections import defaultdict
-
+import urllib
+from urllib.parse import unquote, urlparse
+from pathlib import PurePosixPath
 from bs4 import BeautifulSoup
 
 from urllib.parse import urldefrag
 
-from pyvis.network import Network
 import graphviz
 
 
@@ -27,8 +26,6 @@ class WikipediaSpider(scrapy.Spider):
     ignore_paths = [
         "https://en.wikipedia.org/wiki/*:*",
     ]
-
-    network = Network()
 
     dot = graphviz.Digraph()
 
@@ -55,16 +52,11 @@ class WikipediaSpider(scrapy.Spider):
 
         current_url = response.url
 
-        self.network.add_node(current_url)
-        # self.dot.node(current_url)
-
         outgoing_links = self.get_outgoing_links(response)
         max_visit_count = self.max_children if self.max_children is not None else len(
             outgoing_links)
 
-        print(f'num_outgoing_links: {max_visit_count}')
-
-        # print(f'found {len(outgoing_links)} outgoing links')
+        print(f'max_visit_count: {max_visit_count}')
 
         visited_count = 0
         for url in outgoing_links:
@@ -72,6 +64,10 @@ class WikipediaSpider(scrapy.Spider):
                 print(f'cutoff at {visited_count} >= {max_visit_count}')
                 # yield
                 break
+
+            if url == current_url:
+                print('same url')
+                continue
 
             if self.should_ignore_path(url):
                 # print(f'ignored url: {url}')
@@ -84,29 +80,26 @@ class WikipediaSpider(scrapy.Spider):
                 continue
 
             visited_count += 1
+            self.total_visited += 1
             print(
                 f'({depth}) [{visited_count}/{max_visit_count}] {title} -> {url}')
-            # print(f'creating edge {current_url}, {url}')
 
-            self.network.add_node(url)
-            # self.dot.node(url)
+            current_path = current_url.split("/wiki/")[-1]
+            source_node = urllib.parse.unquote(
+                current_path, encoding='ascii', errors='replace')
 
-            self.network.add_edge(current_url, url)
-            self.dot.edge(current_url, url)
-            # print(f'creating edge {current_url}, {url}')
+            dest_path = url.split("/wiki/")[-1]
+            dest_node = urllib.parse.unquote(
+                dest_path, encoding='ascii', errors='replace')
+            self.dot.edge(source_node, dest_node)
 
             yield scrapy.Request(url, callback=self.parse, meta={'depth': depth+1, "parent_title": title})
 
         if depth == 0:
             print('done')
             print(self.dot.source)
-            # self.dot.render('dot.gv', view=True)
+            self.dot.render('dot.gv', view=True)
             return
-            # print(self.network)
-            # self.network.toggle_physics(True)
-            # self.network.show('graph.html', notebook=False)
-            # print(self.network.get_adj_list())
-            # print(self.network.dot_lang)
 
     def get_outgoing_links(self, response):
         urls = []
