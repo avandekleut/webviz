@@ -22,4 +22,6 @@ poetry env use $(which python)
 
 poetry install
 
+export PYTHONPATH=$PYTHONPATH:$pwd
+
 set +e

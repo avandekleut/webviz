@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 
 from urllib.parse import urldefrag
 
-import graphviz
 from pyvis.network import Network
 
 
@@ -15,8 +14,6 @@ class WikipediaSpider(scrapy.Spider):
     name = "wikipedia"
     allowed_domains = ["en.wikipedia.org"]
     start_urls = ["https://en.wikipedia.org/wiki/Functor"]
-
-    max_children = 3  # set to 3 for fun
 
     # TODO: Make these relative
     allowed_paths = [
@@ -27,11 +24,14 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/*:*",
     ]
 
-    dot = graphviz.Digraph()
     net = Network()
 
-    total_visited = 0
-    max_total_visited = 16
+    max_children = 50
+
+    limit = 100
+
+    def __init__(self, name=None, **kwargs):
+        super().__init__(name, **kwargs)
 
     def parse(self, response, meta={}):
 
@@ -55,43 +55,30 @@ class WikipediaSpider(scrapy.Spider):
         max_visit_count = self.max_children if self.max_children is not None else len(
             outgoing_links)
 
-        print(f'max_visit_count: {max_visit_count}')
+        # print(f'max_visit_count: {max_visit_count}')
 
         visited_count = 0
         for url in outgoing_links:
             if visited_count >= max_visit_count:
-                print(f'cutoff at {visited_count} >= {max_visit_count}')
-                # yield
+                # print(f'cutoff at {visited_count} >= {max_visit_count}')
                 break
 
-            if self.total_visited >= self.max_total_visited:
-                print(
-                    f'hard cutoff at {self.total_visited} >= {self.max_total_visited}')
-                # print(self.dot.source)
-                # self.dot.render('dot.gv', view=True)
-
-                self.net.show('name.html')
-
-                return
-
             if url == current_url:
-                print('same url')
+                # print('same url')
                 continue
 
             if self.should_ignore_path(url):
                 # print(f'ignored url: {url}')
-                # yield
                 continue
 
             if not self.should_allow_path(url):
                 # print(f'url not allowed: {url}')
-                # yield
                 continue
 
             visited_count += 1
-            self.total_visited += 1
-            print(
-                f'[{visited_count}/{max_visit_count}] ({self.total_visited}) {title} -> {url}')
+            self.limit -= 1
+            # print(
+            #     f'[{visited_count}/{max_visit_count}] ({self.limit}) {title} -> {url}')
 
             dest_path = url.split("/wiki/")[-1]
             dest_node = urllib.parse.unquote(
@@ -100,7 +87,9 @@ class WikipediaSpider(scrapy.Spider):
             self.net.add_node(dest_node)
             self.net.add_edge(source_node, dest_node)
 
-            yield scrapy.Request(url, callback=self.parse, meta={"parent_title": title})
+            if self.limit > 0:
+                print(f'yielding with limit {self.limit}')
+                yield scrapy.Request(url, callback=self.parse, meta={"parent_title": title})
 
     def get_outgoing_links(self, response):
         urls = []
