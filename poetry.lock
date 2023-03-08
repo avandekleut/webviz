@@ -1176,13 +1176,13 @@ files = [
 
 [[package]]
 name = "pyvis"
-version = "0.3.2"
+version = "0.3.1"
 description = "A Python network graph visualization library"
 category = "main"
 optional = false
 python-versions = ">3.6"
 files = [
-    {file = "pyvis-0.3.2-py3-none-any.whl", hash = "sha256:5720c4ca8161dc5d9ab352015723abb7a8bb8fb443edeb07f7a322db34a97555"},
+    {file = "pyvis-0.3.1.tar.gz", hash = "sha256:aa817caac54afc9a4df38ada6f46636b842a8bd57197bb6aca5084699da04307"},
 ]
 
 [package.dependencies]
@@ -1576,4 +1576,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "58cdfa2723ffdaf977cdb54b8d192411febdbc5f1b6d5933674b41033fd6a48a"
+content-hash = "37e54f8f6a3ae2b65d68308357058581181c5663a89fa95c35797cf4ffa0e30d"

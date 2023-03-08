@@ -21,3 +21,5 @@ source $VIRTUALENV_NAME/bin/activate
 poetry env use $(which python)
 
 poetry install
+
+set +e
