@@ -16,6 +16,13 @@ class WikipediaSpider(scrapy.Spider):
     allowed_domains = ["en.wikipedia.org"]
     start_urls = ["https://en.wikipedia.org/wiki/Salix_bebbiana"]
 
+    custom_settings = {
+        'CONCURRENT_REQUESTS': 1,
+        'CONCURRENT_ITEMS': 1,
+        'CLOSESPIDER_PAGECOUNT': 1,
+        'CLOSESPIDER_ITEMCOUNT': 10
+    }
+
     # TODO: Make these relative
     allowed_paths = [
         "https://en.wikipedia.org/wiki/*",
@@ -28,13 +35,14 @@ class WikipediaSpider(scrapy.Spider):
     net = Network()
 
     max_children = 3
-    limit = 100
+    limit = 7
 
     # subset selection
-    first_n = 1
+    first_n = None
 
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
+        self.first_n = 1
 
     def parse(self, response, meta={}):
 
@@ -56,22 +64,18 @@ class WikipediaSpider(scrapy.Spider):
         max_visit_count = self.max_children if self.max_children is not None else len(
             outgoing_links)
 
+        print('outgoing_links', outgoing_links)
+
         visited_count = 0
         for url in outgoing_links:
             if visited_count >= max_visit_count:
                 break
 
-            if url == current_url:
-                continue
-
-            if self.should_ignore_path(url):
-                continue
-
-            if not self.should_allow_path(url):
-                continue
-
             visited_count += 1
             self.limit -= 1
+            print('limit', self.limit)
+
+            self.crawler.engine.scheduler_cls.mro
 
             dest_path = url.split("/wiki/")[-1]
             dest_node = urllib.parse.unquote(
@@ -96,29 +100,50 @@ class WikipediaSpider(scrapy.Spider):
 
         for href in response.xpath('//a/@href').getall():
             url = self.get_full_url(response, href)
+            if url == response.url:
+                continue
+
+            if self.should_ignore_path(url):
+                continue
+
+            if not self.should_allow_path(url):
+                continue
+
             urls.append(url)
 
-        unique_urls = list(set(urls))
-        sorted_urls = sorted(unique_urls)
+        print('urls', urls, '\n')
+
+        unique_urls = self.get_unique(urls)
+        print('unique_urls', unique_urls, '\n')
+        # sorted_urls = sorted(unique_urls)
+        sorted_urls = unique_urls
+
+        print('sorted_urls', sorted_urls, '\n')
 
         subset = sorted_urls
         if first_n:
-            print('first_n', first_n)
+            print('first_n', first_n, '\n')
             subset = self.get_first_n(sorted_urls, first_n)
         elif first_p:
-            print('first_p', first_p)
+            print('first_p', first_p, '\n')
             subset = self.get_first_p(sorted_urls, first_p)
         elif any_n:
             subset = self.get_any_n(sorted_urls, any_n)
         elif any_p:
             subset = self.get_any_p(sorted_urls, any_p)
 
+        print('subset', subset, '\n')
         return subset
 
     def assert_one_of_many(self, *args):
         booled = [bool(x) for x in list(args)]
         truthy = [x for x in booled if x]
         return len(truthy) == 1
+
+    def get_unique(self, arr):
+        return list(dict.fromkeys(arr))
+
+        return [x for x in arr if not (x in seen or seen.add(x))]
 
     def get_first_n(self, arr, n=1):
         return arr[:n]
