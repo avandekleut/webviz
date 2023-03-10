@@ -16,12 +16,12 @@ class WikipediaSpider(scrapy.Spider):
     allowed_domains = ["en.wikipedia.org"]
     start_urls = ["https://en.wikipedia.org/wiki/Salix_bebbiana"]
 
-    custom_settings = {
-        'CONCURRENT_REQUESTS': 1,
-        'CONCURRENT_ITEMS': 1,
-        'CLOSESPIDER_PAGECOUNT': 1,
-        'CLOSESPIDER_ITEMCOUNT': 10
-    }
+    # custom_settings = {
+    #     'CONCURRENT_REQUESTS': 1,
+    #     'CONCURRENT_ITEMS': 1,
+    #     'CLOSESPIDER_PAGECOUNT': 1,
+    #     'CLOSESPIDER_ITEMCOUNT': 10
+    # }
 
     # TODO: Make these relative
     allowed_paths = [
@@ -30,11 +30,12 @@ class WikipediaSpider(scrapy.Spider):
 
     ignore_paths = [
         "https://en.wikipedia.org/wiki/*:*",
+        "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
     net = Network()
 
-    max_children = 3
+    max_children = 2
     limit = 7
 
     # subset selection
@@ -42,7 +43,7 @@ class WikipediaSpider(scrapy.Spider):
 
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
-        self.first_n = 1
+        self.first_n = 10
 
     def parse(self, response, meta={}):
 
@@ -74,6 +75,7 @@ class WikipediaSpider(scrapy.Spider):
             visited_count += 1
             self.limit -= 1
             print('limit', self.limit)
+            print('url', url)
 
             self.crawler.engine.scheduler_cls.mro
 
@@ -89,18 +91,20 @@ class WikipediaSpider(scrapy.Spider):
                 yield scrapy.Request(url, callback=self.parse, meta={"parent_title": title})
             else:
                 print('done')
-                self.net.show('out.html')
+            self.net.show('out.html')
 
     def get_outgoing_links(self, response, first_n=None, first_p=None, any_n=None, any_p=None):
         if not self.assert_one_of_many(first_n, first_p, any_n, any_p):
             raise Exception(
                 f'must only pass one of: first_n, first_p, any_n, any_p')
 
+        current_url = response.url
+        print('current_url', current_url)
         urls = []
 
         for href in response.xpath('//a/@href').getall():
             url = self.get_full_url(response, href)
-            if url == response.url:
+            if url == current_url:
                 continue
 
             if self.should_ignore_path(url):
