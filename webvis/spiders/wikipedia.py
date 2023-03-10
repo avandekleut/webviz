@@ -31,7 +31,7 @@ class WikipediaSpider(scrapy.Spider):
     limit = 100
 
     # subset selection
-    get_first_n = 1
+    first_n = 1
 
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
@@ -52,7 +52,7 @@ class WikipediaSpider(scrapy.Spider):
         self.net.add_node(source_node)
 
         outgoing_links = self.get_outgoing_links(
-            response, first_n=self.get_first_n)
+            response, first_n=self.first_n)
         max_visit_count = self.max_children if self.max_children is not None else len(
             outgoing_links)
 
@@ -103,8 +103,10 @@ class WikipediaSpider(scrapy.Spider):
 
         subset = sorted_urls
         if first_n:
+            print('first_n', first_n)
             subset = self.get_first_n(sorted_urls, first_n)
         elif first_p:
+            print('first_p', first_p)
             subset = self.get_first_p(sorted_urls, first_p)
         elif any_n:
             subset = self.get_any_n(sorted_urls, any_n)
