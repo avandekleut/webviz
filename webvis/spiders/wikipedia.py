@@ -13,7 +13,7 @@ from pyvis.network import Network
 class WikipediaSpider(scrapy.Spider):
     name = "wikipedia"
     allowed_domains = ["en.wikipedia.org"]
-    start_urls = ["https://en.wikipedia.org/wiki/Functor"]
+    start_urls = ["https://en.wikipedia.org/wiki/Salix_bebbiana"]
 
     # TODO: Make these relative
     allowed_paths = [
@@ -36,8 +36,7 @@ class WikipediaSpider(scrapy.Spider):
     def parse(self, response, meta={}):
 
         soup = BeautifulSoup(response.text, 'lxml')
-        title_class = "mw-page-title-main"
-        title = soup.find_all("span", {"class": title_class})[0].getText()
+        title = soup.find_all("h1", {"id": "firstHeading"})[0].getText()
 
         parent_title = meta.get('parent_title')
         parent_title = parent_title or None
@@ -78,7 +77,8 @@ class WikipediaSpider(scrapy.Spider):
             self.net.add_edge(source_node, dest_node)
 
             if self.limit > 0:
-                print(f'yielding with limit {self.limit}')
+                print(
+                    f'yielding with limit {self.limit} queue size {len(self.crawler.engine.slot.scheduler)}')
                 yield scrapy.Request(url, callback=self.parse, meta={"parent_title": title})
             else:
                 print('done')
@@ -92,7 +92,8 @@ class WikipediaSpider(scrapy.Spider):
             urls.append(url)
 
         unique_urls = list(set(urls))
-        sorted_urls = sorted(unique_urls)
+        # sorted_urls = sorted(unique_urls)
+        sorted_urls = unique_urls
 
         return sorted_urls
 
