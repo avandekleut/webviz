@@ -4,6 +4,7 @@ import urllib
 from urllib.parse import unquote, urlparse
 from pathlib import PurePosixPath
 from bs4 import BeautifulSoup
+import random
 
 from urllib.parse import urldefrag
 
@@ -27,8 +28,10 @@ class WikipediaSpider(scrapy.Spider):
     net = Network()
 
     max_children = 3
-
     limit = 100
+
+    # subset selection
+    get_first_n = 1
 
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
@@ -48,7 +51,8 @@ class WikipediaSpider(scrapy.Spider):
             current_path, encoding='utf-8', errors='replace')
         self.net.add_node(source_node)
 
-        outgoing_links = self.get_outgoing_links(response)
+        outgoing_links = self.get_outgoing_links(
+            response, first_n=self.get_first_n)
         max_visit_count = self.max_children if self.max_children is not None else len(
             outgoing_links)
 
@@ -72,7 +76,6 @@ class WikipediaSpider(scrapy.Spider):
             dest_path = url.split("/wiki/")[-1]
             dest_node = urllib.parse.unquote(
                 dest_path, encoding='utf-8', errors='replace')
-            # self.dot.edge(source_node, dest_node)
             self.net.add_node(dest_node)
             self.net.add_edge(source_node, dest_node)
 
@@ -84,7 +87,11 @@ class WikipediaSpider(scrapy.Spider):
                 print('done')
                 self.net.show('out.html')
 
-    def get_outgoing_links(self, response):
+    def get_outgoing_links(self, response, first_n=None, first_p=None, any_n=None, any_p=None):
+        if not self.assert_one_of_many(first_n, first_p, any_n, any_p):
+            raise Exception(
+                f'must only pass one of: first_n, first_p, any_n, any_p')
+
         urls = []
 
         for href in response.xpath('//a/@href').getall():
@@ -92,10 +99,39 @@ class WikipediaSpider(scrapy.Spider):
             urls.append(url)
 
         unique_urls = list(set(urls))
-        # sorted_urls = sorted(unique_urls)
-        sorted_urls = unique_urls
+        sorted_urls = sorted(unique_urls)
 
-        return sorted_urls
+        subset = sorted_urls
+        if first_n:
+            subset = self.get_first_n(sorted_urls, first_n)
+        elif first_p:
+            subset = self.get_first_p(sorted_urls, first_p)
+        elif any_n:
+            subset = self.get_any_n(sorted_urls, any_n)
+        elif any_p:
+            subset = self.get_any_p(sorted_urls, any_p)
+
+        return subset
+
+    def assert_one_of_many(self, *args):
+        booled = [bool(x) for x in list(args)]
+        truthy = [x for x in booled if x]
+        return len(truthy) == 1
+
+    def get_first_n(self, arr, n=1):
+        return arr[:n]
+
+    def get_any_n(self, arr, n=1, seed=0):
+        random.seed(seed)
+        return random.sample(arr, n)
+
+    def get_first_p(self, arr, p=0.1):
+        equivalent_n = int(len(arr)*p)
+        return self.get_first_n(arr, equivalent_n)
+
+    def get_any_p(self, arr, p=0.1, seed=0):
+        equivalent_n = int(len(arr)*p)
+        return self.get_any_n(arr, equivalent_n, seed=seed)
 
     def get_full_url(self, response, href):
         url = response.urljoin(href)
