@@ -14,14 +14,11 @@ from pyvis.network import Network
 class WikipediaSpider(scrapy.Spider):
     name = "wikipedia"
     allowed_domains = ["en.wikipedia.org"]
-    start_urls = ["https://en.wikipedia.org/wiki/Salix_bebbiana"]
+    start_urls = ["https://en.wikipedia.org/wiki/Functor"]
 
-    # custom_settings = {
-    #     'CONCURRENT_REQUESTS': 1,
-    #     'CONCURRENT_ITEMS': 1,
-    #     'CLOSESPIDER_PAGECOUNT': 1,
-    #     'CLOSESPIDER_ITEMCOUNT': 10
-    # }
+    custom_settings = {
+        'CLOSESPIDER_PAGECOUNT': 100,
+    }
 
     # TODO: Make these relative
     allowed_paths = [
@@ -35,15 +32,18 @@ class WikipediaSpider(scrapy.Spider):
 
     net = Network()
 
-    max_children = 2
-    limit = 7
+    max_children = 1
+    limit = 0
 
-    # subset selection
+    # TODO: Proper config
     first_n = None
+    first_p = None
+    any_n = 1
+    any_p = None
 
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
-        self.first_n = 10
+        self.any_n = 1
 
     def parse(self, response, meta={}):
 
@@ -60,8 +60,11 @@ class WikipediaSpider(scrapy.Spider):
             current_path, encoding='utf-8', errors='replace')
         self.net.add_node(source_node)
 
-        outgoing_links = self.get_outgoing_links(
-            response, first_n=self.first_n)
+        outgoing_links = self.get_outgoing_links(response,
+                                                 first_n=self.first_n,
+                                                 first_p=self.first_p,
+                                                 any_n=self.any_n,
+                                                 any_p=self.any_p)
         max_visit_count = self.max_children if self.max_children is not None else len(
             outgoing_links)
 
@@ -70,6 +73,8 @@ class WikipediaSpider(scrapy.Spider):
         visited_count = 0
         for url in outgoing_links:
             if visited_count >= max_visit_count:
+                print(
+                    f'terminated early visited_count ({visited_count}) >= max_visit_count ({max_visit_count})')
                 break
 
             visited_count += 1
@@ -85,7 +90,8 @@ class WikipediaSpider(scrapy.Spider):
             self.net.add_node(dest_node)
             self.net.add_edge(source_node, dest_node)
 
-            if self.limit > 0:
+            # if self.limit > 0:
+            if True:
                 print(
                     f'yielding with limit {self.limit} queue size {len(self.crawler.engine.slot.scheduler)}')
                 yield scrapy.Request(url, callback=self.parse, meta={"parent_title": title})
@@ -94,7 +100,7 @@ class WikipediaSpider(scrapy.Spider):
             self.net.show('out.html')
 
     def get_outgoing_links(self, response, first_n=None, first_p=None, any_n=None, any_p=None):
-        if not self.assert_one_of_many(first_n, first_p, any_n, any_p):
+        if not self.assert_at_most_one(first_n, first_p, any_n, any_p):
             raise Exception(
                 f'must only pass one of: first_n, first_p, any_n, any_p')
 
@@ -139,15 +145,13 @@ class WikipediaSpider(scrapy.Spider):
         print('subset', subset, '\n')
         return subset
 
-    def assert_one_of_many(self, *args):
+    def assert_at_most_one(self, *args):
         booled = [bool(x) for x in list(args)]
         truthy = [x for x in booled if x]
-        return len(truthy) == 1
+        return len(truthy) <= 1
 
     def get_unique(self, arr):
         return list(dict.fromkeys(arr))
-
-        return [x for x in arr if not (x in seen or seen.add(x))]
 
     def get_first_n(self, arr, n=1):
         return arr[:n]

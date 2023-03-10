@@ -87,15 +87,15 @@ def test_assert_one_of_many():
 
     exactly_one = [None, 1, None, None]
 
-    assert spider.assert_one_of_many(*exactly_one)
+    assert spider.assert_at_most_one(*exactly_one)
 
     more_than_one = [None, 1, None, 0.1]
 
-    assert not spider.assert_one_of_many(*more_than_one)
+    assert not spider.assert_at_most_one(*more_than_one)
 
-    none = [None, 1, None, 0.1]
+    none = [None, None, None, None]
 
-    assert not spider.assert_one_of_many(*none)
+    assert spider.assert_at_most_one(*none)
 
 
 def test_outgoing_links_hardocded():
