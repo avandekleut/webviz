@@ -14,7 +14,7 @@ from pyvis.network import Network
 class WikipediaSpider(scrapy.Spider):
     name = "wikipedia"
     allowed_domains = ["en.wikipedia.org"]
-    start_urls = ["https://en.wikipedia.org/wiki/Functor"]
+    start_urls = ["https://en.wikipedia.org/wiki/Salix_bebbiana"]
 
     custom_settings = {
         'CLOSESPIDER_PAGECOUNT': 100,
@@ -32,18 +32,18 @@ class WikipediaSpider(scrapy.Spider):
 
     net = Network()
 
-    max_children = 1
+    # TODO: Play nicely with first_n any_n or omit
+    max_children = 4
     limit = 0
 
     # TODO: Proper config
-    first_n = None
+    first_n = 4
     first_p = None
-    any_n = 1
+    any_n = None
     any_p = None
 
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
-        self.any_n = 1
 
     def parse(self, response, meta={}):
 
