@@ -5,6 +5,10 @@ from pyvis.network import Network
 
 from webvis.items import WebvisItem
 
+import scrapy
+
+import time
+
 
 class PyVisPipeline:
     def __init__(self):
@@ -15,20 +19,29 @@ class PyVisPipeline:
         self.nx = nx.DiGraph()
         self.count = 0
         self.save_frequency = 10
+        self.start_time = time.time()
+        self.end_time = None
 
-    def open_spider(self, spider):
-        print('open_spider')
+    def open_spider(self, spider: scrapy.Spider):
+        print('open spider')
+        self.save_frequency = spider.custom_settings['SAVE_FREQUENCY'] or self.save_frequency
 
     def close_spider(self, spider):
         print('close_spider')
         print('count', self.count)
         self.update_and_save_network()
+        self.end_time = time.time()
+        elapsed_time = self.end_time - self.start_time
+        print(f'elapsed time: {elapsed_time} s')
 
     def update_and_save_network(self):
         self.update_nodes_and_edges()
         self.save_network()
 
-    def process_item(self, item: WebvisItem, spider):
+    def process_item(self, item: WebvisItem, spider: scrapy.Spider):
+        save_frequency = spider.settings.get('WANTED_SETTING')
+        spider.settings
+
         self.count += 1
 
         self.nx.add_edge(item['source'], item['dest'])

@@ -21,11 +21,13 @@ class WikipediaSpider(scrapy.Spider):
     ]
 
     custom_settings = {
-        # 'CONCURRENT_REQUESTS': 1,
         'CLOSESPIDER_PAGECOUNT': 25,
+        'CHILDREN': 4,
+        'STRATEGY': 'first',  # 'any'
+        'SAVE_FREQUENCY': 10,
+        'RANDOM_SEED': 0
     }
 
-    # TODO: Make these relative
     allowed_paths = [
         "https://en.wikipedia.org/wiki/*",
     ]
@@ -35,34 +37,27 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    # TODO: Proper config
-    first_n = 4
-    first_p = None
-    any_n = None
-    any_p = None
-
-    save_frequency = 10
-
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
+        random.seed(self.custom_settings['RANDOM_SEED'])
+        self.children = self.custom_settings['CHILDREN']
+        self.strategy = self.custom_settings['STRATEGY']
+        self.save_frequency = self.custom_settings['SAVE_FREQUENCY']
 
     def parse(self, response):
         source = self.get_wiki_title_from_url(response.url)
 
-        outgoing_links = self.get_outgoing_links(response,
-                                                 first_n=self.first_n,
-                                                 first_p=self.first_p,
-                                                 any_n=self.any_n,
-                                                 any_p=self.any_p)
+        outgoing_links = self.get_outgoing_links(response)
 
         for url in outgoing_links:
-            dest = self.get_wiki_title_from_url(url)
-
             yield scrapy.Request(url, callback=self.parse)
+
+            dest = self.get_wiki_title_from_url(url)
 
             item = WebvisItem()
             item['source'] = source
             item['dest'] = dest
+
             yield item
 
     def get_wiki_title_from_url(self, url):
@@ -75,11 +70,13 @@ class WikipediaSpider(scrapy.Spider):
 
         return pretty
 
-    def get_outgoing_links(self, response, first_n=None, first_p=None, any_n=None, any_p=None):
-        if not self.assert_at_most_one(first_n, first_p, any_n, any_p):
-            raise Exception(
-                f'must only pass one of: first_n, first_p, any_n, any_p')
+    def select_subset(self, urls: "list[str]"):
+        if self.strategy == 'first':
+            return urls[:self.children]
+        elif self.strategy == 'any':
+            return random.sample(urls, self.children)
 
+    def get_outgoing_links(self, response):
         current_url = response.url
         self.logger.debug('current_url', current_url)
         urls = []
@@ -99,16 +96,7 @@ class WikipediaSpider(scrapy.Spider):
 
         unique_urls = self.get_unique(urls)
 
-        if first_n:
-            subset = self.get_first_n(unique_urls, first_n)
-        elif first_p:
-            subset = self.get_first_p(unique_urls, first_p)
-        elif any_n:
-            subset = self.get_any_n(unique_urls, any_n)
-        elif any_p:
-            subset = self.get_any_p(unique_urls, any_p)
-        else:
-            subset = unique_urls
+        subset = self.select_subset(unique_urls)
 
         return subset
 
@@ -119,21 +107,6 @@ class WikipediaSpider(scrapy.Spider):
 
     def get_unique(self, arr):
         return list(dict.fromkeys(arr))
-
-    def get_first_n(self, arr, n=1):
-        return arr[:n]
-
-    def get_any_n(self, arr, n=1, seed=0):
-        random.seed(seed)
-        return random.sample(arr, n)
-
-    def get_first_p(self, arr, p=0.1):
-        equivalent_n = int(len(arr)*p)
-        return self.get_first_n(arr, equivalent_n)
-
-    def get_any_p(self, arr, p=0.1, seed=0):
-        equivalent_n = int(len(arr)*p)
-        return self.get_any_n(arr, equivalent_n, seed=seed)
 
     def get_full_url(self, response, href):
         url = response.urljoin(href)
