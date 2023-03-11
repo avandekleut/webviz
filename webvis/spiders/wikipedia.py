@@ -51,9 +51,6 @@ class WikipediaSpider(scrapy.Spider):
 
     def parse(self, response):
 
-        soup = BeautifulSoup(response.text, 'lxml')
-        title = soup.find_all("h1", {"id": "firstHeading"})[0].getText()
-
         current_url = response.url
 
         current_path = current_url.split("/wiki/")[-1]
@@ -99,7 +96,6 @@ class WikipediaSpider(scrapy.Spider):
                 yield scrapy.Request(url, callback=self.parse)
 
                 item = WebvisItem()
-                item['source_title'] = title
                 item['source_url'] = source_node
                 item['dest_url'] = dest_node
                 yield item
