@@ -12,26 +12,25 @@ import time
 
 class PyVisPipeline:
     def __init__(self):
-        # self.net = Network(
-        #     directed=True,
-        #     select_menu=True,
-        # )
         self.nx = nx.DiGraph()
+
         self.count = 0
+
         self.save_frequency = 10
+
         self.start_time = time.time()
-        self.end_time = None
 
     def open_spider(self, spider: scrapy.Spider):
         print('open spider')
-        self.save_frequency = spider.custom_settings['SAVE_FREQUENCY'] or self.save_frequency
 
     def close_spider(self, spider):
         print('close_spider')
         print('count', self.count)
         self.update_and_save_network()
-        self.end_time = time.time()
-        elapsed_time = self.end_time - self.start_time
+        self.track_elapsed_time()
+
+    def track_elapsed_time(self):
+        elapsed_time = time.time() - self.start_time
         print(f'elapsed time: {elapsed_time} s')
 
     def update_and_save_network(self):
@@ -39,9 +38,6 @@ class PyVisPipeline:
         self.save_network()
 
     def process_item(self, item: WebvisItem, spider: scrapy.Spider):
-        save_frequency = spider.settings.get('WANTED_SETTING')
-        spider.settings
-
         self.count += 1
 
         self.nx.add_edge(item['source'], item['dest'])
@@ -69,12 +65,12 @@ class PyVisPipeline:
     def get_communities_by_number_of_desired_elements_per_community(self, desired=5):
         """
         if after i iterations there are i + 1 communities and we want each community
-        to hold d desired items, then the expected number of iterations is c = len(V) // d
+        to hold d desired items, then the expected number of iterations is c = |V| / d
         where len(V) is the number of nodes in the graph.
 
-        This would yield c communities, each containing d elements, so that d * c = d * len(V) // d ~= len(V)
+        This would yield c communities, each containing d elements, so that d * c = d * |V| / d = len(V)
         """
-        iters = len(self.nx.nodes) // desired
+        iters = self.nx.number_of_nodes() // desired
         return self.get_communities(iters)
 
     def get_communities(self, iters):

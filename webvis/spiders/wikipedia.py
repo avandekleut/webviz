@@ -22,10 +22,6 @@ class WikipediaSpider(scrapy.Spider):
 
     custom_settings = {
         'CLOSESPIDER_PAGECOUNT': 25,
-        'CHILDREN': 4,
-        'STRATEGY': 'first',  # 'any'
-        'SAVE_FREQUENCY': 10,
-        'RANDOM_SEED': 0
     }
 
     allowed_paths = [
@@ -33,18 +29,21 @@ class WikipediaSpider(scrapy.Spider):
     ]
 
     ignore_paths = [
+        # discussion posts etc
         "https://en.wikipedia.org/wiki/*:*",
+
+        # keep search local, main page links to random
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    def __init__(self, name=None, start_url=None, **kwargs):
+    def __init__(self, name=None, start_url=None, children=4, strategy='first', random_seed=0, **kwargs):
         super().__init__(name, **kwargs)
-        random.seed(self.custom_settings['RANDOM_SEED'])
-        if start_url is not None:
-            self.start_urls = [start_url]
-        self.children = self.custom_settings['CHILDREN']
-        self.strategy = self.custom_settings['STRATEGY']
-        self.save_frequency = self.custom_settings['SAVE_FREQUENCY']
+        self.start_urls = [start_url] if start_url else self.start_urls
+        self.children = int(children)
+        self.strategy = strategy
+        self.random_seed = random_seed
+
+        random.seed(self.random_seed)
 
         print((self).__dict__)
 
