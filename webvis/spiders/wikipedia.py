@@ -16,7 +16,8 @@ from webvis.items import WebvisItem
 class WikipediaSpider(scrapy.Spider):
     name = "wikipedia"
     allowed_domains = ["en.wikipedia.org"]
-    start_urls = ["https://en.wikipedia.org/wiki/Salix_bebbiana"]
+    start_urls = ["https://en.wikipedia.org/wiki/Salix_bebbiana",
+                  "https://en.wikipedia.org/wiki/Functor"]
 
     custom_settings = {
         'CONCURRENT_REQUESTS': 1,
@@ -67,12 +68,12 @@ class WikipediaSpider(scrapy.Spider):
         max_visit_count = self.max_children if self.max_children is not None else len(
             outgoing_links)
 
-        print('outgoing_links', outgoing_links)
+        self.logger.debug('outgoing_links', outgoing_links)
 
         visited_count = 0
         for url in outgoing_links:
             if visited_count >= max_visit_count:
-                print(
+                self.logger.debug(
                     f'terminated early visited_count ({visited_count}) >= max_visit_count ({max_visit_count})')
                 break
 
@@ -80,9 +81,9 @@ class WikipediaSpider(scrapy.Spider):
             self.total += 1
             queue_size = len(self.crawler.engine.slot.scheduler)
 
-            print('total', self.total)
-            print('url', url)
-            print('queue size', queue_size)
+            self.logger.debug('total', self.total)
+            self.logger.debug('url', url)
+            self.logger.debug('queue size', queue_size)
 
             self.crawler.engine.scheduler_cls.mro
 
@@ -93,7 +94,7 @@ class WikipediaSpider(scrapy.Spider):
             grand_total = self.total + queue_size
 
             if grand_total < 100:
-                print(
+                self.logger.debug(
                     f'yielding')
                 yield scrapy.Request(url, callback=self.parse)
 
@@ -103,10 +104,6 @@ class WikipediaSpider(scrapy.Spider):
                 item['dest_url'] = dest_node
                 yield item
             else:
-                print(
-                    f'grand_total ({grand_total}) >= {100}, closing')
-                self.crawler.engine.close_spider(self)
-
                 raise scrapy.exceptions.CloseSpider('bandwidth_exceeded')
 
     def get_outgoing_links(self, response, first_n=None, first_p=None, any_n=None, any_p=None):
@@ -115,7 +112,7 @@ class WikipediaSpider(scrapy.Spider):
                 f'must only pass one of: first_n, first_p, any_n, any_p')
 
         current_url = response.url
-        print('current_url', current_url)
+        self.logger.debug('current_url', current_url)
         urls = []
 
         for href in response.xpath('//a/@href').getall():
@@ -131,28 +128,28 @@ class WikipediaSpider(scrapy.Spider):
 
             urls.append(url)
 
-        print('urls', urls, '\n')
+        self.logger.debug('urls', urls, '\n')
 
         unique_urls = self.get_unique(urls)
-        print('unique_urls', unique_urls, '\n')
+        self.logger.debug('unique_urls', unique_urls, '\n')
         # sorted_urls = sorted(unique_urls)
         sorted_urls = unique_urls
 
-        print('sorted_urls', sorted_urls, '\n')
+        self.logger.debug('sorted_urls', sorted_urls, '\n')
 
         subset = sorted_urls
         if first_n:
-            print('first_n', first_n, '\n')
+            self.logger.debug('first_n', first_n, '\n')
             subset = self.get_first_n(sorted_urls, first_n)
         elif first_p:
-            print('first_p', first_p, '\n')
+            self.logger.debug('first_p', first_p, '\n')
             subset = self.get_first_p(sorted_urls, first_p)
         elif any_n:
             subset = self.get_any_n(sorted_urls, any_n)
         elif any_p:
             subset = self.get_any_p(sorted_urls, any_p)
 
-        print('subset', subset, '\n')
+        self.logger.debug('subset', subset, '\n')
         return subset
 
     def assert_at_most_one(self, *args):
