@@ -17,7 +17,7 @@ class WikipediaSpider(scrapy.Spider):
     name = "wikipedia"
     allowed_domains = ["en.wikipedia.org"]
     start_urls = [
-        "https://en.wikipedia.org/wiki/Functor"
+        "https://en.wikipedia.org/wiki/Salix_bebbiana"
     ]
 
     custom_settings = {
