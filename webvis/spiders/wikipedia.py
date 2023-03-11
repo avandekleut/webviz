@@ -36,11 +36,10 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    def __init__(self, name=None, start_url=None, children=4, strategy='first', random_seed=0, **kwargs):
+    def __init__(self, name=None, start_url=None, children=4, random_seed=0, **kwargs):
         super().__init__(name, **kwargs)
         self.start_urls = [start_url] if start_url else self.start_urls
         self.children = int(children)
-        self.strategy = strategy
         self.random_seed = random_seed
 
         random.seed(self.random_seed)
@@ -74,10 +73,7 @@ class WikipediaSpider(scrapy.Spider):
         return pretty
 
     def select_subset(self, urls: list):
-        if self.strategy == 'first':
-            return urls[:self.children]
-        elif self.strategy == 'any':
-            return random.sample(urls, self.children)
+        return urls[:self.children]
 
     def get_outgoing_urls(self, response):
         return response.xpath('//a/@href').getall()
