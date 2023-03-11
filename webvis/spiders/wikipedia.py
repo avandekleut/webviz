@@ -37,19 +37,21 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name=None, start_url=None, **kwargs):
         super().__init__(name, **kwargs)
         random.seed(self.custom_settings['RANDOM_SEED'])
+        if start_url is not None:
+            self.start_urls = [start_url]
         self.children = self.custom_settings['CHILDREN']
         self.strategy = self.custom_settings['STRATEGY']
         self.save_frequency = self.custom_settings['SAVE_FREQUENCY']
+
+        print((self).__dict__)
 
     def parse(self, response):
         source = self.get_wiki_title_from_url(response.url)
 
         outgoing_links = self.get_next_urls(response)
-
-        print(outgoing_links)
 
         for url in outgoing_links:
             yield scrapy.Request(url, callback=self.parse)
@@ -82,34 +84,31 @@ class WikipediaSpider(scrapy.Spider):
         return response.xpath('//a/@href').getall()
 
     def get_next_urls(self, response):
-        wiki_urls = self.get_wiki_urls(response)
+        wiki_urls = self.get_targeted_urls(response)
 
         unique_urls = self.get_unique(wiki_urls)
 
         subset = self.select_subset(unique_urls)
 
-        print(f"""
-              wiki_urls: ({len(wiki_urls)}) {wiki_urls}
-              unique_urls: ({len(unique_urls)}) {unique_urls}
-              subset: ({len(subset)}) {subset}
-              """)
-
         return subset
 
-    def get_wiki_urls(self, response):
-        current_url = response.url
+    def get_targeted_urls(self, response):
+        def should_ignore(url):
+            if url == response.url:
+                return True
+
+            if self.should_ignore_path(url):
+                return True
+
+            if not self.should_allow_path(url):
+                return True
 
         urls = []
 
         for url in self.get_outgoing_urls(response):
             url = self.get_full_url(response, url)
-            if url == current_url:
-                continue
 
-            if self.should_ignore_path(url):
-                continue
-
-            if not self.should_allow_path(url):
+            if should_ignore(url):
                 continue
 
             urls.append(url)
