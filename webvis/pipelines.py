@@ -6,7 +6,10 @@ from webvis.items import WebvisItem
 
 class PyVisPipeline:
     def __init__(self):
-        self.net = Network(directed=True)
+        self.net = Network(
+            directed=True,
+            select_menu=True,
+        )
         self.count = 0
         self.save_frequency = 10
 
@@ -21,19 +24,16 @@ class PyVisPipeline:
     def process_item(self, item: WebvisItem, spider):
         self.count += 1
 
-        source_url = item['source_url']
-        dest_url = item['dest_url']
+        source = item['source']
+        dest = item['dest']
 
-        self.net.add_node(
-            source_url, label=source_url.replace("_", " "))
+        self.net.add_node(source)
 
-        self.net.add_node(dest_url, label=dest_url.replace("_", " "))
+        self.net.add_node(dest)
 
-        self.net.add_edge(source_url, dest_url)
+        self.net.add_edge(source, dest)
 
         if self.count % self.save_frequency == 0:
             self.net.save_graph('out.html')
-
-        self.net.directed
 
         return item

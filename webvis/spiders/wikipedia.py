@@ -16,11 +16,12 @@ from webvis.items import WebvisItem
 class WikipediaSpider(scrapy.Spider):
     name = "wikipedia"
     allowed_domains = ["en.wikipedia.org"]
-    start_urls = ["https://en.wikipedia.org/wiki/Salix_bebbiana",
-                  "https://en.wikipedia.org/wiki/Functor"]
+    start_urls = [
+        "https://en.wikipedia.org/wiki/Functor"
+    ]
 
     custom_settings = {
-        'CONCURRENT_REQUESTS': 1,
+        # 'CONCURRENT_REQUESTS': 1,
         'CLOSESPIDER_PAGECOUNT': 25,
     }
 
@@ -34,10 +35,6 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    # TODO: Play nicely with first_n any_n or omit
-    max_children = 4
-    total = 0
-
     # TODO: Proper config
     first_n = 4
     first_p = None
@@ -50,57 +47,33 @@ class WikipediaSpider(scrapy.Spider):
         super().__init__(name, **kwargs)
 
     def parse(self, response):
-
-        current_url = response.url
-
-        current_path = current_url.split("/wiki/")[-1]
-        source_node = urllib.parse.unquote(
-            current_path, encoding='utf-8', errors='replace')
+        source = self.get_wiki_title_from_url(response.url)
 
         outgoing_links = self.get_outgoing_links(response,
                                                  first_n=self.first_n,
                                                  first_p=self.first_p,
                                                  any_n=self.any_n,
                                                  any_p=self.any_p)
-        # max_visit_count = self.max_children if self.max_children is not None else len(
-        #     outgoing_links)
 
-        self.logger.debug('outgoing_links', outgoing_links)
-
-        visited_count = 0
         for url in outgoing_links:
-            # if visited_count >= max_visit_count:
-            #     self.logger.debug(
-            #         f'terminated early visited_count ({visited_count}) >= max_visit_count ({max_visit_count})')
-            #     break
+            dest = self.get_wiki_title_from_url(url)
 
-            visited_count += 1
-            self.total += 1
-            queue_size = len(self.crawler.engine.slot.scheduler)
+            yield scrapy.Request(url, callback=self.parse)
 
-            self.logger.debug('total', self.total)
-            self.logger.debug('url', url)
-            self.logger.debug('queue size', queue_size)
+            item = WebvisItem()
+            item['source'] = source
+            item['dest'] = dest
+            yield item
 
-            self.crawler.engine.scheduler_cls.mro
+    def get_wiki_title_from_url(self, url):
+        wiki_path = url.split("/wiki/")[-1]
 
-            dest_path = url.split("/wiki/")[-1]
-            dest_node = urllib.parse.unquote(
-                dest_path, encoding='utf-8', errors='replace')
+        decoded = urllib.parse.unquote(
+            wiki_path, encoding='utf-8', errors='replace')
 
-            grand_total = self.total + queue_size
+        pretty = decoded.replace("_", " ")
 
-            if grand_total < 100:
-                self.logger.debug(
-                    f'yielding')
-                yield scrapy.Request(url, callback=self.parse)
-
-                item = WebvisItem()
-                item['source_url'] = source_node
-                item['dest_url'] = dest_node
-                yield item
-            else:
-                raise scrapy.exceptions.CloseSpider('bandwidth_exceeded')
+        return pretty
 
     def get_outgoing_links(self, response, first_n=None, first_p=None, any_n=None, any_p=None):
         if not self.assert_at_most_one(first_n, first_p, any_n, any_p):
@@ -124,28 +97,19 @@ class WikipediaSpider(scrapy.Spider):
 
             urls.append(url)
 
-        self.logger.debug('urls', urls, '\n')
-
         unique_urls = self.get_unique(urls)
-        self.logger.debug('unique_urls', unique_urls, '\n')
-        # sorted_urls = sorted(unique_urls)
-        sorted_urls = unique_urls
 
-        self.logger.debug('sorted_urls', sorted_urls, '\n')
-
-        subset = sorted_urls
         if first_n:
-            self.logger.debug('first_n', first_n, '\n')
-            subset = self.get_first_n(sorted_urls, first_n)
+            subset = self.get_first_n(unique_urls, first_n)
         elif first_p:
-            self.logger.debug('first_p', first_p, '\n')
-            subset = self.get_first_p(sorted_urls, first_p)
+            subset = self.get_first_p(unique_urls, first_p)
         elif any_n:
-            subset = self.get_any_n(sorted_urls, any_n)
+            subset = self.get_any_n(unique_urls, any_n)
         elif any_p:
-            subset = self.get_any_p(sorted_urls, any_p)
+            subset = self.get_any_p(unique_urls, any_p)
+        else:
+            subset = unique_urls
 
-        self.logger.debug('subset', subset, '\n')
         return subset
 
     def assert_at_most_one(self, *args):

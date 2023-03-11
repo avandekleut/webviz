@@ -7,6 +7,5 @@ import scrapy
 
 
 class WebvisItem(scrapy.Item):
-    source_title = scrapy.Field()
-    source_url = scrapy.Field()
-    dest_url = scrapy.Field()
+    source = scrapy.Field()
+    dest = scrapy.Field()

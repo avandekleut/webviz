@@ -1,5 +1,10 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyTest
 .pytest_cache
 
+# Generated files
 out.html
-
-**/*.pyc
