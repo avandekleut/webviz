@@ -77,7 +77,7 @@ class PyVisPipeline:
         iters = len(self.nx.nodes) // desired
         return self.get_communities(iters)
 
-    def get_communities(self, iters=5):
+    def get_communities(self, iters):
         assert iters > 0, f'expected: {iters} > 0'
 
         community_generator = girvan_newman(self.nx)
@@ -86,12 +86,11 @@ class PyVisPipeline:
         # girvan_newman: each iteration produces exactly one
         # more community.
         for iter in range(iters - 1):
-            next(community_generator)
-
-        communities = []
-        for community in next(community_generator):
-            community = list(community)
-            communities.append(community)
+            try:
+                communities = map(list, next(community_generator))
+            except StopIteration:
+                print(
+                    f'terminated get_communities early: ({iter}) StopIteration')
 
         return communities
 
