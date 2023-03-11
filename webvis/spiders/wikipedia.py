@@ -47,7 +47,9 @@ class WikipediaSpider(scrapy.Spider):
     def parse(self, response):
         source = self.get_wiki_title_from_url(response.url)
 
-        outgoing_links = self.get_outgoing_links(response)
+        outgoing_links = self.get_next_urls(response)
+
+        print(outgoing_links)
 
         for url in outgoing_links:
             yield scrapy.Request(url, callback=self.parse)
@@ -70,19 +72,37 @@ class WikipediaSpider(scrapy.Spider):
 
         return pretty
 
-    def select_subset(self, urls: "list[str]"):
+    def select_subset(self, urls: list):
         if self.strategy == 'first':
             return urls[:self.children]
         elif self.strategy == 'any':
             return random.sample(urls, self.children)
 
-    def get_outgoing_links(self, response):
+    def get_outgoing_urls(self, response):
+        return response.xpath('//a/@href').getall()
+
+    def get_next_urls(self, response):
+        wiki_urls = self.get_wiki_urls(response)
+
+        unique_urls = self.get_unique(wiki_urls)
+
+        subset = self.select_subset(unique_urls)
+
+        print(f"""
+              wiki_urls: ({len(wiki_urls)}) {wiki_urls}
+              unique_urls: ({len(unique_urls)}) {unique_urls}
+              subset: ({len(subset)}) {subset}
+              """)
+
+        return subset
+
+    def get_wiki_urls(self, response):
         current_url = response.url
-        self.logger.debug('current_url', current_url)
+
         urls = []
 
-        for href in response.xpath('//a/@href').getall():
-            url = self.get_full_url(response, href)
+        for url in self.get_outgoing_urls(response):
+            url = self.get_full_url(response, url)
             if url == current_url:
                 continue
 
@@ -94,11 +114,7 @@ class WikipediaSpider(scrapy.Spider):
 
             urls.append(url)
 
-        unique_urls = self.get_unique(urls)
-
-        subset = self.select_subset(unique_urls)
-
-        return subset
+        return urls
 
     def assert_at_most_one(self, *args):
         booled = [bool(x) for x in list(args)]
