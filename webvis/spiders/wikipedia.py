@@ -62,17 +62,17 @@ class WikipediaSpider(scrapy.Spider):
                                                  first_p=self.first_p,
                                                  any_n=self.any_n,
                                                  any_p=self.any_p)
-        max_visit_count = self.max_children if self.max_children is not None else len(
-            outgoing_links)
+        # max_visit_count = self.max_children if self.max_children is not None else len(
+        #     outgoing_links)
 
         self.logger.debug('outgoing_links', outgoing_links)
 
         visited_count = 0
         for url in outgoing_links:
-            if visited_count >= max_visit_count:
-                self.logger.debug(
-                    f'terminated early visited_count ({visited_count}) >= max_visit_count ({max_visit_count})')
-                break
+            # if visited_count >= max_visit_count:
+            #     self.logger.debug(
+            #         f'terminated early visited_count ({visited_count}) >= max_visit_count ({max_visit_count})')
+            #     break
 
             visited_count += 1
             self.total += 1

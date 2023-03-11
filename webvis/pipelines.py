@@ -6,7 +6,7 @@ from webvis.items import WebvisItem
 
 class PyVisPipeline:
     def __init__(self):
-        self.net = Network()
+        self.net = Network(directed=True)
         self.count = 0
         self.save_frequency = 10
 
@@ -33,5 +33,7 @@ class PyVisPipeline:
 
         if self.count % self.save_frequency == 0:
             self.net.save_graph('out.html')
+
+        self.net.directed
 
         return item
