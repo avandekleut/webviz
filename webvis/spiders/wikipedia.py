@@ -10,6 +10,8 @@ from urllib.parse import urldefrag
 
 from pyvis.network import Network
 
+from webvis.items import WebvisItem
+
 
 class WikipediaSpider(scrapy.Spider):
     name = "wikipedia"
@@ -17,7 +19,8 @@ class WikipediaSpider(scrapy.Spider):
     start_urls = ["https://en.wikipedia.org/wiki/Salix_bebbiana"]
 
     custom_settings = {
-        'CLOSESPIDER_PAGECOUNT': 100,
+        'CONCURRENT_REQUESTS': 1,
+        'CLOSESPIDER_PAGECOUNT': 25,
     }
 
     # TODO: Make these relative
@@ -30,11 +33,9 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    net = Network()
-
     # TODO: Play nicely with first_n any_n or omit
     max_children = 4
-    limit = 0
+    total = 0
 
     # TODO: Proper config
     first_n = 4
@@ -42,23 +43,21 @@ class WikipediaSpider(scrapy.Spider):
     any_n = None
     any_p = None
 
+    save_frequency = 10
+
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
 
-    def parse(self, response, meta={}):
+    def parse(self, response):
 
         soup = BeautifulSoup(response.text, 'lxml')
         title = soup.find_all("h1", {"id": "firstHeading"})[0].getText()
-
-        parent_title = meta.get('parent_title')
-        parent_title = parent_title or None
 
         current_url = response.url
 
         current_path = current_url.split("/wiki/")[-1]
         source_node = urllib.parse.unquote(
             current_path, encoding='utf-8', errors='replace')
-        self.net.add_node(source_node)
 
         outgoing_links = self.get_outgoing_links(response,
                                                  first_n=self.first_n,
@@ -78,26 +77,37 @@ class WikipediaSpider(scrapy.Spider):
                 break
 
             visited_count += 1
-            self.limit -= 1
-            print('limit', self.limit)
+            self.total += 1
+            queue_size = len(self.crawler.engine.slot.scheduler)
+
+            print('total', self.total)
             print('url', url)
+            print('queue size', queue_size)
 
             self.crawler.engine.scheduler_cls.mro
 
             dest_path = url.split("/wiki/")[-1]
             dest_node = urllib.parse.unquote(
                 dest_path, encoding='utf-8', errors='replace')
-            self.net.add_node(dest_node)
-            self.net.add_edge(source_node, dest_node)
 
-            # if self.limit > 0:
-            if True:
+            grand_total = self.total + queue_size
+
+            if grand_total < 100:
                 print(
-                    f'yielding with limit {self.limit} queue size {len(self.crawler.engine.slot.scheduler)}')
-                yield scrapy.Request(url, callback=self.parse, meta={"parent_title": title})
+                    f'yielding')
+                yield scrapy.Request(url, callback=self.parse)
+
+                item = WebvisItem()
+                item['source_title'] = title
+                item['source_url'] = source_node
+                item['dest_url'] = dest_node
+                yield item
             else:
-                print('done')
-            self.net.show('out.html')
+                print(
+                    f'grand_total ({grand_total}) >= {100}, closing')
+                self.crawler.engine.close_spider(self)
+
+                raise scrapy.exceptions.CloseSpider('bandwidth_exceeded')
 
     def get_outgoing_links(self, response, first_n=None, first_p=None, any_n=None, any_p=None):
         if not self.assert_at_most_one(first_n, first_p, any_n, any_p):
