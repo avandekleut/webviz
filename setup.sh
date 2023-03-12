@@ -4,24 +4,24 @@ PYTHON_VERSION=3.8
 
 VIRTUALENV_NAME=local
 
-which -s brew
-if [[ $? != 0 ]] ; then
-    # Install Homebrew
-    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-else
-    brew update
-fi
+# install homebrew
+command -v brew || ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-brew install python@$PYTHON_VERSION poetry graphviz
+# install python
+command -v python$PYTHON_VERSION || brew install python@$PYTHON_VERSION
 
-virtualenv $VIRTUALENV_NAME --python=$PYTHON_VERSION
+# install poetry
+command -v poetry || brew install poetry
 
-source $VIRTUALENV_NAME/bin/activate
+# activate poetry env
+poetry env use $PYTHON_VERSION
 
-poetry env use $(which python)
+poetry shell
 
 poetry install
 
-export PYTHONPATH=$PYTHONPATH:$pwd
+poetry export -o requirements.txt --without-hashes
+
+export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 set +e
