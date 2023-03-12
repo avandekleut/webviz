@@ -29,7 +29,6 @@ CONCURRENT_REQUESTS = 16
 CLOSESPIDER_ITEMCOUNT = 100
 
 # Custom settings for network visualization
-NETWORK_SAVE_FREQUENCY = 25
 NETWORK_GROUPS = 6
 
 # Configure a delay for requests for the same website (default: 0)

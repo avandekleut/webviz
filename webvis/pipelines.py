@@ -20,16 +20,14 @@ class PyVisPipeline:
         """
         # Get settings e.g. from command line like -S NETWORK_GROUPS=8
         settings = crawler.settings
-        save_frequency = settings.getint('NETWORK_SAVE_FREQUENCY')
         network_groups = settings.getint('NETWORK_GROUPS')
 
-        return cls(save_frequency, network_groups)
+        return cls(network_groups)
 
-    def __init__(self, save_frequency: int, network_groups: int):
+    def __init__(self,  network_groups: int):
         self.nx = nx.Graph()
 
         self.count = 0
-        self.save_frequency = save_frequency
         self.network_groups = network_groups
 
         print(self.__dict__)
@@ -45,10 +43,6 @@ class PyVisPipeline:
         self.count += 1
 
         self.nx.add_edge(item['source'], item['dest'])
-
-        if self.count % self.save_frequency == 0:
-            print(f'{self.count} saving')
-            self.update_and_save_network()
 
         return item
 

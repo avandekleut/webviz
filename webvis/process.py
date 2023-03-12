@@ -5,9 +5,10 @@ from webvis.spiders.wikipedia import WikipediaSpider
 
 def run_crawler_process(
     start_url='https://en.wikipedia.org/wiki/Functor',
-    network_groups=6,
+    network_groups=9,
     branching_factor=4
 ):
+
     # override project-level settings with params
     settings = get_project_settings()
     settings.set('NETWORK_GROUPS', network_groups)
