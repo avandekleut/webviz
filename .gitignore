@@ -8,6 +8,7 @@ __pycache__/
 
 # Generated files
 out.html
+lib
 
 # Poetry
 requirements.txt
