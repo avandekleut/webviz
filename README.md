@@ -24,19 +24,37 @@ poetry install --without test,dev # only install runtime dependencies
 
 ## Scripts
 
-### Scrape
+### Scrapy
+
+##### Scrapy shell
+
+Scrapy uses the `scrapy shell` to run interactive experiments.
 
 ```
-scrapy crawl wikipedia -L WARN
+scrapy crawl wikipedia
 ```
 
-Scrape from script:
+Pass crawler settings with the `-s` flag, like
+
+```
+scrapy crawl wikipedia -s CLOSESPIDER_ITEMCOUNT=50 -s NETWORK_GROUPS=4
+```
+
+Project-level crawler settings can be found in `webvis/settings.py`.
+
+Pass spider settings with the `-a` flag, like
+
+```
+scrapy crawl wikipedia -a branching_factor=4
+```
+
+##### Scrapy scripts
+
+Scrape from python script:
 
 ```
 python webviz/process.py
 ```
-
-See `webviz/settings.py` for default settings that can be overridden.
 
 ### Test
 
