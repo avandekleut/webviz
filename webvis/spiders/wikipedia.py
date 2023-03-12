@@ -32,12 +32,10 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    def __init__(self, name=None, start_url=None, children=4, **kwargs):
+    def __init__(self, name=None, start_url=None, branching_factor=4, **kwargs):
         super().__init__(name, **kwargs)
         self.start_urls = [start_url] if start_url else self.start_urls
-        self.children = int(children)
-
-        self.logger.debug({'self': self.__dict__, })
+        self.branching_factor = int(branching_factor)
 
     def parse(self, response):
         source = self.get_wiki_title_from_url(response.url)
@@ -66,7 +64,7 @@ class WikipediaSpider(scrapy.Spider):
         return pretty
 
     def select_subset(self, urls: list):
-        return urls[:self.children]
+        return urls[:self.branching_factor]
 
     def get_outgoing_urls(self, response):
         return response.xpath('//a/@href').getall()
