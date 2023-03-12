@@ -5,24 +5,41 @@ from pyvis.network import Network
 
 from webvis.items import WebvisItem
 
-import time
+from scrapy.crawler import CrawlerProcess
 
 from webvis.spiders.wikipedia import WikipediaSpider
 
 
 class PyVisPipeline:
-    def __init__(self):
+    @classmethod
+    def from_crawler(cls, crawler: CrawlerProcess):
+        """
+        instantiate this pipeline given a crawler reference. The crawler has
+        access to the current settings which can be used to configure this
+        pipeline.
+        """
+        # Get settings e.g. from command line like -S NETWORK_GROUPS=8
+        settings = crawler.settings
+        save_frequency = settings.getint('NETWORK_SAVE_FREQUENCY')
+        network_groups = settings.getint('NETWORK_GROUPS')
+
+        return cls(save_frequency, network_groups)
+
+    def __init__(self, save_frequency: int, network_groups: int):
         self.nx = nx.Graph()
 
         self.count = 0
-        self.save_frequency = 10
+        self.save_frequency = save_frequency
+        self.network_groups = network_groups
+
+        print(self.__dict__)
 
     def open_spider(self, spider: WikipediaSpider):
-        # TODO: move config out of spider
-        self.iters = spider.groups - 1
+        pass
 
     def close_spider(self, spider: WikipediaSpider):
         self.update_and_save_network()
+        print(f'Finished with {self.count} nodes.')
 
     def process_item(self, item: WebvisItem, spider: WikipediaSpider):
         self.count += 1
@@ -30,6 +47,7 @@ class PyVisPipeline:
         self.nx.add_edge(item['source'], item['dest'])
 
         if self.count % self.save_frequency == 0:
+            print(f'{self.count} saving')
             self.update_and_save_network()
 
         return item
@@ -57,7 +75,8 @@ class PyVisPipeline:
 
         # girvan_newman: each iteration produces exactly one
         # more community.
-        for iter in range(self.iters):
+        iters = self.network_groups - 1
+        for iter in range(iters):
             try:
                 communities = map(list, next(community_generator))
             except StopIteration:

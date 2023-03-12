@@ -1,7 +1,6 @@
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from webvis.spiders.wikipedia import WikipediaSpider
-import sys
 
 settings = get_project_settings()
 

@@ -30,6 +30,23 @@ poetry install --without test,dev # only install runtime dependencies
 scrapy crawl wikipedia -L WARN
 ```
 
+Common crawl parameters:
+
+```
+-a start_url=https://en.wikipedia.org/wiki/Salix_bebbiana
+-a children=4
+
+-s DEPTH_LIMIT=2
+-s CLOSESPIDER_ITEMCOUNT=10
+
+```
+
+Scrape from script:
+
+```
+python webviz/process.py
+```
+
 ### Test
 
 ```sh

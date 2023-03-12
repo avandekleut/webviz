@@ -1,7 +1,6 @@
 import re
 import scrapy
 import urllib
-import random
 
 from urllib.parse import urldefrag
 
@@ -33,15 +32,10 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    def __init__(self, name=None, start_url=None, children=4, groups=6, random_seed=0, **kwargs):
+    def __init__(self, name=None, start_url=None, children=4, **kwargs):
         super().__init__(name, **kwargs)
         self.start_urls = [start_url] if start_url else self.start_urls
         self.children = int(children)
-
-        # TODO: Pull this out of this class
-        self.groups = int(groups)
-
-        random.seed(random_seed)
 
         self.logger.debug({'self': self.__dict__, })
 

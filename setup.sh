@@ -22,6 +22,6 @@ poetry install
 
 poetry export -o requirements.txt --without-hashes
 
-export PYTHONPATH=$PYTHONPATH:$pwd
+export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 set +e

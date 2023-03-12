@@ -20,7 +20,17 @@ NEWSPIDER_MODULE = "webvis.spiders"
 ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-# CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 16
+
+# Number of items to process before shutting down spiders
+# NOTE: Will generate more than 100 items due to in-flight requests.
+# Decreasing CONCURRENT_REQUESTS to 1 will generate closer to
+# CLOSESPIDER_ITEMCOUNT items.
+CLOSESPIDER_ITEMCOUNT = 100
+
+# Custom settings for network visualization
+NETWORK_SAVE_FREQUENCY = 25
+NETWORK_GROUPS = 6
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -44,9 +54,10 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-# SPIDER_MIDDLEWARES = {
-#    "webvis.middlewares.WebvisSpiderMiddleware": 543,
-# }
+SPIDER_MIDDLEWARES = {
+    #    "webvis.middlewares.WebvisSpiderMiddleware": 543,
+    # "scrapy.extensions.closespider.CloseSpider": 500,
+}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
