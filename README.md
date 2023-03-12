@@ -14,7 +14,12 @@ The setup script installs poetry and activates the local virtualenv environment.
 
 ```sh
 poetry add numpy
+poetry add pytest --group test # test dependencies
+poetry add autpep8 --group dev # dev dependencies
+
 poetry install
+
+poetry install --without test,dev # only install runtime dependencies
 ```
 
 ## Scripts

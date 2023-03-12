@@ -1,14 +1,9 @@
 import re
 import scrapy
 import urllib
-from urllib.parse import unquote, urlparse
-from pathlib import PurePosixPath
-from bs4 import BeautifulSoup
 import random
 
 from urllib.parse import urldefrag
-
-from pyvis.network import Network
 
 from webvis.items import WebvisItem
 
