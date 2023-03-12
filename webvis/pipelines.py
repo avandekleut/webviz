@@ -35,8 +35,9 @@ class PyVisPipeline:
         pass
 
     def close_spider(self, spider: WikipediaSpider):
-        self.net.update_network_properties(self.network_groups)
-        self.net.save_network()
+        self.net.pretty()
+        self.net.cluster(self.network_groups)
+        self.net.export_pyvis('out.html')
         print(f'Finished with {self.count} nodes.')
 
     def process_item(self, item: WebvisItem, spider: WikipediaSpider):

@@ -11,7 +11,14 @@ class NetworkHelper:
     def add_edge(self, source, dest):
         self.nx.add_edge(source, dest)
 
-    def save_network(self, filename='out.html'):
+    def pretty(self):
+        """
+        adjust visual graph properties like node size,
+        labels
+        """
+        self.update_node_sizes()
+
+    def export_pyvis(self, filename='out.html'):
         net = Network(
             # directed=True, # interesting but distracting
             select_menu=True
@@ -19,51 +26,46 @@ class NetworkHelper:
         net.from_nx(self.nx)
         net.save_graph(filename)
 
-    def update_network_properties(self, groups: int):
-        communities = self.get_communities(groups)
-        self.update_node_group_membership_by_community(communities)
-        self.update_node_sizes()
+    def cluster(self, num_clusters: int):
+        communities = self._get_clusters(num_clusters)
+        self._update_node_group_membership_by_community(communities)
 
-    def get_communities(self, groups: int):
-        community_generator = girvan_newman(self.nx)
+    def _get_clusters(self, num_clusters: int):
+        cluster_generator = girvan_newman(self.nx)
 
         # girvan_newman: each iteration produces exactly one
         # more community.
-        iters = groups - 1
+        iters = num_clusters - 1
         for iter in range(iters):
             try:
-                communities = map(list, next(community_generator))
+                clusters = map(list, next(cluster_generator))
             except StopIteration:
                 pass
 
-        return communities
+        return clusters
 
-    def update_node_group_membership_by_community(self, communities):
+    def _update_node_group_membership_by_community(self, communities):
         for i, community in enumerate(communities):
             for node in community:
-                self.update_node(node, {'group': i})
+                self._update_node(node, {'group': i})
 
-    # def rename_all_nodes_foo(self):
-    #     for node in self.nx.nodes:
-    #         self.update_node(node, {'label': "foo"})
-
-    def update_node(self, node: str, props: dict):
+    def _update_node(self, node: str, props: dict):
         for key, value in props.items():
             self.nx.nodes[node][key] = value
 
     def update_node_sizes(self):
         for node in self.nx.nodes:
-            size = self.get_node_size(node)
-            self.update_node(node, {'size': size})
+            size = self._get_node_size(node)
+            self._update_node(node, {'size': size})
 
-    def get_node_size(self, node):
-        size = self.get_num_neighbours(node)
-        return self.normalize_size(size)
+    def _get_node_size(self, node):
+        size = self._get_num_neighbours(node)
+        return self._normalize_size(size)
 
-    def get_num_neighbours(self, node):
+    def _get_num_neighbours(self, node):
         neighbors = nx.all_neighbors(self.nx, node)
         num_neighbors = len(list(neighbors))
         return num_neighbors
 
-    def normalize_size(self, size, base_size=2):
+    def _normalize_size(self, size, base_size=2):
         return base_size + size
