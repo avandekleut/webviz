@@ -33,5 +33,5 @@ scrapy crawl wikipedia -L WARN
 ### Test
 
 ```sh
-pytest || echo "Tests failed"
+pytest
 ```

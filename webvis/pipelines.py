@@ -5,8 +5,6 @@ from pyvis.network import Network
 
 from webvis.items import WebvisItem
 
-import scrapy
-
 import time
 
 from webvis.spiders.wikipedia import WikipediaSpider
@@ -17,28 +15,14 @@ class PyVisPipeline:
         self.nx = nx.Graph()
 
         self.count = 0
-
         self.save_frequency = 10
 
-        self.start_time = time.time()
-
     def open_spider(self, spider: WikipediaSpider):
-        # print('open spider')
+        # TODO: move config out of spider
         self.iters = spider.groups - 1
 
     def close_spider(self, spider: WikipediaSpider):
-        # print('close_spider')
-        print('count', self.count)
         self.update_and_save_network()
-        self.track_elapsed_time()
-
-    def track_elapsed_time(self):
-        elapsed_time = time.time() - self.start_time
-        print(f'elapsed time: {elapsed_time} s')
-
-    def update_and_save_network(self):
-        self.update_nodes_and_edges()
-        self.save_network()
 
     def process_item(self, item: WebvisItem, spider: WikipediaSpider):
         self.count += 1
@@ -50,27 +34,27 @@ class PyVisPipeline:
 
         return item
 
-    def update_nodes_and_edges(self, ):
+    def update_and_save_network(self):
+        self.update_network_properties()
+        self.save_network()
+
+    def update_network_properties(self, ):
         communities = self.get_communities()
-        self.update_node_groups(communities)
+        self.update_node_group_membership_by_community(communities)
 
         self.update_node_sizes()
 
-    def get_communities_by_number_of_desired_elements_per_community(self, desired=5):
-        """
-        if after i iterations there are i + 1 communities and we want each community
-        to hold d desired items, then the expected number of iterations is c = |V| / d
-        where len(V) is the number of nodes in the graph.
-
-        This would yield c communities, each containing d elements, so that d * c = d * |V| / d = len(V)
-        """
-        iters = self.nx.number_of_nodes() // desired
-        return self.get_communities()
+    def save_network(self, filename='out.html'):
+        net = Network(
+            # directed=True, # interesting but distracting
+            select_menu=True
+        )
+        net.from_nx(self.nx)
+        net.save_graph(filename)
 
     def get_communities(self):
         community_generator = girvan_newman(self.nx)
 
-        # run the algorithm for iters - 1 iterations
         # girvan_newman: each iteration produces exactly one
         # more community.
         for iter in range(self.iters):
@@ -83,20 +67,10 @@ class PyVisPipeline:
 
         return communities
 
-    def update_node_groups(self, communities):
+    def update_node_group_membership_by_community(self, communities):
         for i, community in enumerate(communities):
             for node in community:
                 self.nx.nodes[node]['group'] = i
-
-    def update_edge_weights_by_community_membership(self, communities):
-        """
-        update all edge weights to be 1 between members of a community and 0 
-        between non-members
-        """
-        pass
-        # for node in self.nx.nodes:
-        # for
-        # self.nx.nodes[node]['weight'] = 100
 
     def update_node_sizes(self):
         for node in self.nx.nodes:
@@ -114,11 +88,3 @@ class PyVisPipeline:
 
     def normalize_size(self, size, base_size=2):
         return base_size + size
-
-    def save_network(self, filename='out.html'):
-        net = Network(
-            # directed=True, # interesting but distracting
-            select_menu=True
-        )
-        net.from_nx(self.nx)
-        net.save_graph(filename)

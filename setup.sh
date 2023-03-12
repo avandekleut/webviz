@@ -13,7 +13,7 @@ command -v python$PYTHON_VERSION || brew install python@$PYTHON_VERSION
 # install poetry
 command -v poetry || brew install poetry
 
-# use poetry shell
+# activate poetry env
 poetry env use $PYTHON_VERSION
 
 poetry shell
