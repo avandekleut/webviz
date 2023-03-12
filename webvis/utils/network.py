@@ -41,12 +41,20 @@ class NetworkHelper:
     def update_node_group_membership_by_community(self, communities):
         for i, community in enumerate(communities):
             for node in community:
-                self.nx.nodes[node]['group'] = i
+                self.update_node(node, {'group': i})
+
+    # def rename_all_nodes_foo(self):
+    #     for node in self.nx.nodes:
+    #         self.update_node(node, {'label': "foo"})
+
+    def update_node(self, node: str, props: dict):
+        for key, value in props.items():
+            self.nx.nodes[node][key] = value
 
     def update_node_sizes(self):
         for node in self.nx.nodes:
             size = self.get_node_size(node)
-            self.nx.nodes[node]['size'] = size
+            self.update_node(node, {'size': size})
 
     def get_node_size(self, node):
         size = self.get_num_neighbours(node)
