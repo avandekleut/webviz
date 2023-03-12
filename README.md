@@ -6,7 +6,7 @@
 source setup.sh
 ```
 
-This project uses [poetry]() to manage dependencies and [virtualenv]() to manage python versions.
+This project uses [poetry](https://python-poetry.org/docs/) to manage dependencies and virtual environments. No need to use `pip` or `virtualenv`.
 
 ### Poetry
 

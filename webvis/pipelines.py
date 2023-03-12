@@ -9,10 +9,12 @@ import scrapy
 
 import time
 
+from webvis.spiders.wikipedia import WikipediaSpider
+
 
 class PyVisPipeline:
     def __init__(self):
-        self.nx = nx.DiGraph()
+        self.nx = nx.Graph()
 
         self.count = 0
 
@@ -20,11 +22,12 @@ class PyVisPipeline:
 
         self.start_time = time.time()
 
-    def open_spider(self, spider: scrapy.Spider):
-        print('open spider')
+    def open_spider(self, spider: WikipediaSpider):
+        # print('open spider')
+        self.iters = spider.groups - 1
 
-    def close_spider(self, spider):
-        print('close_spider')
+    def close_spider(self, spider: WikipediaSpider):
+        # print('close_spider')
         print('count', self.count)
         self.update_and_save_network()
         self.track_elapsed_time()
@@ -37,7 +40,7 @@ class PyVisPipeline:
         self.update_nodes_and_edges()
         self.save_network()
 
-    def process_item(self, item: WebvisItem, spider: scrapy.Spider):
+    def process_item(self, item: WebvisItem, spider: WikipediaSpider):
         self.count += 1
 
         self.nx.add_edge(item['source'], item['dest'])
@@ -47,18 +50,9 @@ class PyVisPipeline:
 
         return item
 
-    def update_nodes_and_edges(self, iters=7, desired_elements_per_community=None):
-        if iters and desired_elements_per_community:
-            raise Exception(
-                f'expected one of: iters, desired_elements_per_community. got: {iters}, {desired_elements_per_community}')
-
-        if desired_elements_per_community is not None:
-            communities = self.get_communities_by_number_of_desired_elements_per_community(
-                5)
-        else:
-            communities = self.get_communities(iters)
+    def update_nodes_and_edges(self, ):
+        communities = self.get_communities()
         self.update_node_groups(communities)
-        # self.update_edge_weights_by_community_membership(communities)
 
         self.update_node_sizes()
 
@@ -71,22 +65,21 @@ class PyVisPipeline:
         This would yield c communities, each containing d elements, so that d * c = d * |V| / d = len(V)
         """
         iters = self.nx.number_of_nodes() // desired
-        return self.get_communities(iters)
+        return self.get_communities()
 
-    def get_communities(self, iters):
-        assert iters > 0, f'expected: {iters} > 0'
-
+    def get_communities(self):
         community_generator = girvan_newman(self.nx)
 
         # run the algorithm for iters - 1 iterations
         # girvan_newman: each iteration produces exactly one
         # more community.
-        for iter in range(iters - 1):
+        for iter in range(self.iters):
             try:
                 communities = map(list, next(community_generator))
             except StopIteration:
-                print(
-                    f'terminated get_communities early: ({iter}) StopIteration')
+                pass
+                # print(
+                #     f'terminated get_communities early: ({iter}) StopIteration')
 
         return communities
 

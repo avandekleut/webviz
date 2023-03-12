@@ -21,7 +21,9 @@ class WikipediaSpider(scrapy.Spider):
     ]
 
     custom_settings = {
-        'CLOSESPIDER_PAGECOUNT': 25,
+        # NOTE: Generally speaking this will generate more than 100 results.
+        # In experiments it returned up to 200 results.
+        'CLOSESPIDER_ITEMCOUNT': 100
     }
 
     allowed_paths = [
@@ -36,15 +38,17 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    def __init__(self, name=None, start_url=None, children=4, random_seed=0, **kwargs):
+    def __init__(self, name=None, start_url=None, children=4, groups=6, random_seed=0, **kwargs):
         super().__init__(name, **kwargs)
         self.start_urls = [start_url] if start_url else self.start_urls
         self.children = int(children)
-        self.random_seed = random_seed
 
-        random.seed(self.random_seed)
+        # TODO: Pull this out of this class
+        self.groups = int(groups)
 
-        print((self).__dict__)
+        random.seed(random_seed)
+
+        self.logger.debug({'self': self.__dict__, })
 
     def parse(self, response):
         source = self.get_wiki_title_from_url(response.url)
