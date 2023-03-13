@@ -2,20 +2,23 @@ import re
 
 
 class PathFilter:
-    def __init__(self, allowed_paths: "list[str]" or None, ignore_paths: "list[str]" or None):
+    def __init__(self,
+                 allowed_paths: "list[str]" or None,
+                 ignore_paths: "list[str]" or None
+                 ):
         self.allowed_paths = allowed_paths or ['*']
         self.ignore_paths = ignore_paths or []
 
-        self.seen = []
+        self.visited = []
 
     def visit(self, url):
-        self.seen.append(url)
+        self.visited.append(url)
 
     def should_allow(self, url):
         return not self.should_ignore(url)
 
     def should_ignore(self, url):
-        if url in self.seen:
+        if url in self.visited:
             return True
 
         if self.should_ignore_path(url):
@@ -39,4 +42,4 @@ class PathFilter:
         return False
 
     def wildcard_to_regular_expression(self, path):
-        return re.escape(path).replace('\*', '.+')
+        return re.escape(path).replace('\\*', '.+')

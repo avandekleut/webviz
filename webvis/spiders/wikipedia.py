@@ -31,7 +31,8 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    def __init__(self, name=None, start_url=None, branching_factor=4, **kwargs):
+    def __init__(self, name=None, start_url=None,
+                 branching_factor=4, **kwargs):
         super().__init__(name, **kwargs)
 
         self.name = name
