@@ -12,15 +12,9 @@ class WikipediaParser:
         self.url = response.url
 
     def get_urls(self):
-        print('get_urls')
         hrefs = self.response.xpath('//a/@href').getall()
-        urls = []
-        for href in hrefs:
-            print('href', href)
-            url = self.href_to_full_url(href)
-            print('url', url)
-            urls.append(url)
-        return urls
+        full_urls = map(self.href_to_full_url, hrefs)
+        return full_urls
 
     def href_to_full_url(self, href):
         url = self.response.urljoin(href)
