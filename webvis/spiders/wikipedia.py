@@ -43,32 +43,21 @@ class WikipediaSpider(scrapy.Spider):
 
     def parse(self, response):
         parsed = WikipediaParser(response)
-        print('parsed')
 
         self.filter.visit(parsed.url)
-        print('visited')
+
+        urls = self.filter_urls(parsed.get_urls())
 
         source = parsed.get_title()
-        print('source', source)
-
-        all_urls = parsed.get_urls()
-        print('all_urls', all_urls)
-
-        urls = self.filter_urls(all_urls)
-        print('urls', urls)
 
         for url in urls:
-            print('yield url', url)
             yield scrapy.Request(url, callback=self.parse)
 
             dest = parsed.get_title(url)
-            print('dest', dest)
 
             item = WebvisItem()
             item['source'] = source
             item['dest'] = dest
-
-            print('item', item)
 
             yield item
 
