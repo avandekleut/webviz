@@ -1,4 +1,3 @@
-import re
 import scrapy
 import urllib
 
@@ -7,6 +6,7 @@ from urllib.parse import urldefrag
 from webvis.items import WebvisItem
 from webvis.utils.path_filter import PathFilter
 from webvis.utils.path_sampler import PathSampler
+from webvis.utils.wikipedia_parser import WikipediaParser
 
 
 class WikipediaSpider(scrapy.Spider):
@@ -42,56 +42,42 @@ class WikipediaSpider(scrapy.Spider):
         self.sampler = PathSampler(branching_factor)
 
     def parse(self, response):
-        current_url = response.url
-        self.filter.visit(current_url)
-        source = self.get_wiki_title_from_url(current_url)
+        parsed = WikipediaParser(response)
+        print('parsed')
 
-        outgoing_links = self.get_next_urls(response)
+        self.filter.visit(parsed.url)
+        print('visited')
 
-        for url in outgoing_links:
+        source = parsed.get_title()
+        print('source', source)
+
+        all_urls = parsed.get_urls()
+        print('all_urls', all_urls)
+
+        urls = self.filter_urls(all_urls)
+        print('urls', urls)
+
+        for url in urls:
+            print('yield url', url)
             yield scrapy.Request(url, callback=self.parse)
 
-            dest = self.get_wiki_title_from_url(url)
+            dest = parsed.get_title(url)
+            print('dest', dest)
 
             item = WebvisItem()
             item['source'] = source
             item['dest'] = dest
 
+            print('item', item)
+
             yield item
 
-    def get_wiki_title_from_url(self, url):
-        wiki_path = url.split("/wiki/")[-1]
-
-        decoded = urllib.parse.unquote(
-            wiki_path, encoding='utf-8', errors='replace')
-
-        pretty = decoded.replace("_", " ")
-
-        return pretty
-
-    def get_outgoing_urls(self, response):
-        return response.xpath('//a/@href').getall()
-
-    def get_next_urls(self, response):
-
-        urls = []
-
-        for url in self.get_outgoing_urls(response):
-            url = self.get_full_url(response, url)
-
+    def filter_urls(self, urls):
+        filtered_urls = []
+        for url in urls:
             if self.filter.should_ignore(url):
                 continue
 
-            urls.append(url)
+            filtered_urls.append(url)
 
-        return self.sampler.filter(urls)
-
-    def assert_at_most_one(self, *args):
-        booled = [bool(x) for x in list(args)]
-        truthy = [x for x in booled if x]
-        return len(truthy) <= 1
-
-    def get_full_url(self, response, href):
-        url = response.urljoin(href)
-        unfragmented = urldefrag(url)[0]  # remove anchors, etc
-        return unfragmented
+        return self.sampler.filter(filtered_urls)
