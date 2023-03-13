@@ -11,12 +11,22 @@ class NetworkHelper:
     def add_edge(self, source, dest):
         self.nx.add_edge(source, dest)
 
+    def pipeline(self, groups=6, filepath='out'):
+        """
+        basic steps to run from any base self.nx network
+        """
+        self.pretty()
+        self.cluster(groups)
+        self.export_pyvis(f'{filepath}.html')
+        # self.serialize(f'{filepath}.nx')
+        # self.load(f'{filepath}.nx')
+
     def pretty(self):
         """
         adjust visual graph properties like node size,
         labels
         """
-        self.update_node_sizes()
+        self._update_node_sizes()
 
     def export_pyvis(self, filename='out.html'):
         net = Network(
@@ -53,7 +63,7 @@ class NetworkHelper:
         for key, value in props.items():
             self.nx.nodes[node][key] = value
 
-    def update_node_sizes(self):
+    def _update_node_sizes(self):
         for node in self.nx.nodes:
             size = self._get_node_size(node)
             self._update_node(node, {'size': size})

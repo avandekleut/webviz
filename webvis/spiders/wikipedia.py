@@ -5,6 +5,7 @@ import urllib
 from urllib.parse import urldefrag
 
 from webvis.items import WebvisItem
+from webvis.utils.path_filter import PathFilter
 
 
 class WikipediaSpider(scrapy.Spider):
@@ -37,8 +38,12 @@ class WikipediaSpider(scrapy.Spider):
         self.start_urls = [start_url] if start_url else self.start_urls
         self.branching_factor = int(branching_factor)
 
+        self.filter = PathFilter(self.allowed_paths, self.ignore_paths)
+
     def parse(self, response):
-        source = self.get_wiki_title_from_url(response.url)
+        current_url = response.url
+        self.filter.visit(current_url)
+        source = self.get_wiki_title_from_url(current_url)
 
         outgoing_links = self.get_next_urls(response)
 
@@ -79,22 +84,13 @@ class WikipediaSpider(scrapy.Spider):
         return subset
 
     def get_targeted_urls(self, response):
-        def should_ignore(url):
-            if url == response.url:
-                return True
-
-            if self.should_ignore_path(url):
-                return True
-
-            if not self.should_allow_path(url):
-                return True
 
         urls = []
 
         for url in self.get_outgoing_urls(response):
             url = self.get_full_url(response, url)
 
-            if should_ignore(url):
+            if self.filter.should_ignore(url):
                 continue
 
             urls.append(url)
@@ -113,20 +109,3 @@ class WikipediaSpider(scrapy.Spider):
         url = response.urljoin(href)
         unfragmented = urldefrag(url)[0]  # remove anchors, etc
         return unfragmented
-
-    def should_ignore_path(self, path):
-        return self.filter_paths_by_pattern(path, self.ignore_paths)
-
-    def should_allow_path(self, path):
-        return self.filter_paths_by_pattern(path, self.allowed_paths)
-
-    def filter_paths_by_pattern(self, path, patterns):
-        for pattern in patterns:
-            regular_expression = self.wildcard_to_regular_expression(pattern)
-            if re.match(regular_expression, path):
-                return True
-
-        return False
-
-    def wildcard_to_regular_expression(self, path):
-        return re.escape(path).replace('\*', '.+')
