@@ -13,14 +13,14 @@ class NetworkHelper:
     def add_edge(self, source, dest):
         self.nx.add_edge(source, dest)
 
-    def pipeline(self, groups=6, filepath='out'):
+    def pipeline(self, groups=6, name='out'):
         """
         basic steps to run from any base self.nx network
         """
         self.pretty()
         self.cluster(groups)
-        self.export_pyvis(f'{filepath}.html')
-        self.export_nx(f'{filepath}.nx')
+        self.export_pyvis(name)
+        self.export_nx(name)
 
     def pretty(self):
         """
@@ -29,21 +29,27 @@ class NetworkHelper:
         """
         self._update_node_sizes()
 
-    def export_nx(self, filename: str):
+    def export_nx(self, name: str):
+        filename = self.get_nx_filename(name)
         pickle.dump(self.nx, open(filename, 'wb'))
 
-    def load_nx(self, filename: str):
+    def load_nx(self, name: str):
+        filename = self.get_nx_filename(name)
         self.nx = pickle.load(open(filename, 'rb'))
 
     @classmethod
-    def from_cache(cls, filename: str):
+    def from_cache(cls, name: str):
         net = cls()
-        net.load_nx(filename)
+        net.load_nx(name)
         return net
 
-    def export_pyvis(self, filename: str):
+    @classmethod
+    def get_nx_filename(cls, name):
+        return name + '.nx'
+
+    def export_pyvis(self, name: str):
+        filename = name + '.html'
         net = Network(
-            # directed=True, # interesting but distracting
             select_menu=True
         )
         net.from_nx(self.nx)

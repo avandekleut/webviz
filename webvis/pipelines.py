@@ -21,15 +21,13 @@ class PyVisPipeline:
         # Get settings e.g. from command line like -S NETWORK_GROUPS=8
         settings = crawler.settings
         network_groups = settings.getint('NETWORK_GROUPS')
-        filepath = settings.get('FILEPATH')
 
-        return cls(network_groups, filepath)
+        return cls(network_groups,)
 
-    def __init__(self, network_groups: int, filepath: str):
+    def __init__(self, network_groups: int):
         self.net = NetworkHelper()
 
         self.network_groups = network_groups
-        self.filepath = filepath
 
         self.count = 0
 
@@ -39,7 +37,7 @@ class PyVisPipeline:
         pass
 
     def close_spider(self, spider: WikipediaSpider):
-        self.net.pipeline(filepath=spider.filepath)
+        self.net.pipeline(name=spider.filepath)
 
         print(f'Finished with {self.count} nodes.')
 

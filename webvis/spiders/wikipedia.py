@@ -1,10 +1,6 @@
 import scrapy
-import urllib
-
-from urllib.parse import urldefrag
 
 from webvis.items import WebvisItem
-from webvis.utils.filepath_utils import FilepathUtils
 from webvis.utils.path_filter import PathFilter
 from webvis.utils.path_sampler import PathSampler
 from webvis.utils.wikipedia_parser import WikipediaParser
