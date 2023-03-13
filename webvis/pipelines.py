@@ -1,5 +1,4 @@
-import pickle
-import networkx as nx
+from networkx import Graph
 from networkx.algorithms.community.centrality import girvan_newman
 
 from webvis.items import WebvisItem
@@ -7,7 +6,7 @@ from webvis.items import WebvisItem
 from scrapy.crawler import CrawlerProcess
 
 from webvis.spiders.wikipedia import WikipediaSpider
-from webvis.utils.network import NetworkHelper
+from webvis.utils.network.pipeline import Pipeline
 
 
 class PyVisPipeline:
@@ -25,7 +24,7 @@ class PyVisPipeline:
         return cls(network_groups,)
 
     def __init__(self, network_groups: int):
-        self.net = NetworkHelper()
+        self.net = Graph()
 
         self.network_groups = network_groups
 
@@ -37,7 +36,7 @@ class PyVisPipeline:
         pass
 
     def close_spider(self, spider: WikipediaSpider):
-        self.net.pipeline(name=spider.filepath)
+        Pipeline(self.net).run()
 
         print(f'Finished with {self.count} nodes.')
 
