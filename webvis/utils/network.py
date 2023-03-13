@@ -10,6 +10,7 @@ from networkx.algorithms.community.centrality import girvan_newman
 class NetworkHelper:
     @classmethod
     def from_nx_cache(cls, name: str):
+        print(f'loading from cache: {name}')
         filename = cls.generate_nx_filename(name)
         net = cls()
         net.load_nx(filename)
