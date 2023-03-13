@@ -73,11 +73,6 @@ class WikipediaSpider(scrapy.Spider):
         return response.xpath('//a/@href').getall()
 
     def get_next_urls(self, response):
-        wiki_urls = self.get_targeted_urls(response)
-
-        return self.sampler.filter(wiki_urls)
-
-    def get_targeted_urls(self, response):
 
         urls = []
 
@@ -89,7 +84,7 @@ class WikipediaSpider(scrapy.Spider):
 
             urls.append(url)
 
-        return urls
+        return self.sampler.filter(urls)
 
     def assert_at_most_one(self, *args):
         booled = [bool(x) for x in list(args)]
