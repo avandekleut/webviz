@@ -1,3 +1,4 @@
+import os
 import pickle
 
 from pyvis.network import Network
@@ -31,6 +32,7 @@ class NetworkHelper:
 
     def export_nx(self, name: str):
         filename = self.get_nx_filename(name)
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         pickle.dump(self.nx, open(filename, 'wb'))
 
     def load_nx(self, name: str):
@@ -44,8 +46,9 @@ class NetworkHelper:
         return net
 
     @classmethod
-    def get_nx_filename(cls, name):
-        return name + '.nx'
+    def get_nx_filename(cls, name, dir="out"):
+        filename = name + '.nx'
+        return os.path.join(dir, filename)
 
     def export_pyvis(self, name: str):
         filename = name + '.html'

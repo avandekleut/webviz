@@ -8,6 +8,7 @@ __pycache__/
 
 # Generated files
 out.*
+out/
 lib
 
 # Poetry
