@@ -1,3 +1,5 @@
+import pickle
+
 from pyvis.network import Network
 
 import networkx as nx
@@ -18,8 +20,6 @@ class NetworkHelper:
         self.pretty()
         self.cluster(groups)
         self.export_pyvis(f'{filepath}.html')
-        # self.serialize(f'{filepath}.nx')
-        # self.load(f'{filepath}.nx')
 
     def pretty(self):
         """
@@ -39,6 +39,29 @@ class NetworkHelper:
     def cluster(self, num_clusters: int):
         communities = self._get_clusters(num_clusters)
         self._update_node_group_membership_by_community(communities)
+
+    def save(self, filename: str):
+        pickle.dump(self.nx, open(filename, 'wb'))
+
+    def load(self, filename: str):
+        self.nx = pickle.load(open(filename, 'rb'))
+
+    def _update_node_sizes(self):
+        for node in self.nx.nodes:
+            size = self._get_node_size(node)
+            self._update_node(node, {'size': size})
+
+    def _get_node_size(self, node):
+        size = self._get_num_neighbours(node)
+        return self._normalize_size(size)
+
+    def _get_num_neighbours(self, node):
+        neighbors = nx.all_neighbors(self.nx, node)
+        num_neighbors = len(list(neighbors))
+        return num_neighbors
+
+    def _normalize_size(self, size, base_size=2):
+        return base_size + size
 
     def _get_clusters(self, num_clusters: int):
         cluster_generator = girvan_newman(self.nx)
@@ -62,20 +85,3 @@ class NetworkHelper:
     def _update_node(self, node: str, props: dict):
         for key, value in props.items():
             self.nx.nodes[node][key] = value
-
-    def _update_node_sizes(self):
-        for node in self.nx.nodes:
-            size = self._get_node_size(node)
-            self._update_node(node, {'size': size})
-
-    def _get_node_size(self, node):
-        size = self._get_num_neighbours(node)
-        return self._normalize_size(size)
-
-    def _get_num_neighbours(self, node):
-        neighbors = nx.all_neighbors(self.nx, node)
-        num_neighbors = len(list(neighbors))
-        return num_neighbors
-
-    def _normalize_size(self, size, base_size=2):
-        return base_size + size
