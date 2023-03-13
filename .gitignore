@@ -13,3 +13,4 @@ lib
 # Poetry
 requirements.txt
 .DS_Store
+out.nx
