@@ -6,6 +6,7 @@ from urllib.parse import urldefrag
 
 from webvis.items import WebvisItem
 from webvis.utils.path_filter import PathFilter
+from webvis.utils.path_sampler import PathSampler
 
 
 class WikipediaSpider(scrapy.Spider):
@@ -36,9 +37,9 @@ class WikipediaSpider(scrapy.Spider):
     def __init__(self, name=None, start_url=None, branching_factor=4, **kwargs):
         super().__init__(name, **kwargs)
         self.start_urls = [start_url] if start_url else self.start_urls
-        self.branching_factor = int(branching_factor)
 
         self.filter = PathFilter(self.allowed_paths, self.ignore_paths)
+        self.sampler = PathSampler(branching_factor)
 
     def parse(self, response):
         current_url = response.url
@@ -68,20 +69,13 @@ class WikipediaSpider(scrapy.Spider):
 
         return pretty
 
-    def select_subset(self, urls: list):
-        return urls[:self.branching_factor]
-
     def get_outgoing_urls(self, response):
         return response.xpath('//a/@href').getall()
 
     def get_next_urls(self, response):
         wiki_urls = self.get_targeted_urls(response)
 
-        unique_urls = self.get_unique(wiki_urls)
-
-        subset = self.select_subset(unique_urls)
-
-        return subset
+        return self.sampler.filter(wiki_urls)
 
     def get_targeted_urls(self, response):
 
@@ -101,9 +95,6 @@ class WikipediaSpider(scrapy.Spider):
         booled = [bool(x) for x in list(args)]
         truthy = [x for x in booled if x]
         return len(truthy) <= 1
-
-    def get_unique(self, arr):
-        return list(dict.fromkeys(arr))
 
     def get_full_url(self, response, href):
         url = response.urljoin(href)
