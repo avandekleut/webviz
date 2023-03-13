@@ -5,7 +5,7 @@ from webvis.spiders.wikipedia import WikipediaSpider
 
 def run_crawler_process(
     start_url='https://en.wikipedia.org/wiki/Functor',
-    network_groups=9,
+    network_groups=7,
     branching_factor=4
 ):
 
