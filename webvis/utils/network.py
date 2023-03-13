@@ -39,16 +39,13 @@ class NetworkHelper:
         self._update_node_sizes()
 
     def save_nx(self, filename: str):
-        print(f'save_nx: filename={filename}')
         self._create_missing_folders(filename)
         pickle.dump(self.nx, open(filename, 'wb'))
 
     def load_nx(self, filename: str):
-        print(f'load_nx: filename={filename}')
         self.nx = pickle.load(open(filename, 'rb'))
 
     def export_pyvis(self, filename: str):
-        print(f'export_pyvis: filename={filename}')
         self._create_missing_folders(filename)
         net = Network(
             select_menu=True,

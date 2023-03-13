@@ -17,12 +17,10 @@ def run_crawler_process(
 
     try:
         net = NetworkHelper.from_nx_cache(name)
-        print(f'cache hit: {name}')
         net.pipeline(groups=network_groups, name=name)
         return
 
     except Exception:
-        print(f'cache miss: {name}')
         pass
 
     # override project-level settings with params
