@@ -2,7 +2,7 @@ class PathSampler:
     def __init__(self, branching_factor: int):
         self.branching_factor = branching_factor
 
-    def filter(self, urls):
+    def sample(self, urls):
         urls = self._get_unique(urls)
         urls = self._select_subset(urls)
         return urls

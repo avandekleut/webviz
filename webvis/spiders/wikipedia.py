@@ -31,13 +31,12 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    def __init__(self, name=None, start_url=None, branching_factor=4, filepath='out', **kwargs):
+    def __init__(self, name=None, start_url=None, branching_factor=4, **kwargs):
         super().__init__(name, **kwargs)
 
         self.name = name
         self.start_url = start_url
         self.branching_factor = branching_factor
-        self.filepath = filepath
 
         self.start_urls = [start_url] if start_url else self.start_urls
 
@@ -45,14 +44,12 @@ class WikipediaSpider(scrapy.Spider):
         self.sampler = PathSampler(branching_factor)
 
     def parse(self, response):
+        self.filter.visit(response.url)
+
         parsed = WikipediaParser(response)
-
-        self.filter.visit(parsed.url)
-
-        urls = self.filter_urls(parsed.get_urls())
-
         source = parsed.get_title_from_url()
 
+        urls = self.get_next_urls(parsed.get_urls())
         for url in urls:
             yield scrapy.Request(url, callback=self.parse)
 
@@ -64,12 +61,7 @@ class WikipediaSpider(scrapy.Spider):
 
             yield item
 
-    def filter_urls(self, urls):
-        filtered_urls = []
-        for url in urls:
-            if self.filter.should_ignore(url):
-                continue
+    def get_next_urls(self, urls):
+        filtered_urls = filter(self.filter.should_allow, urls)
 
-            filtered_urls.append(url)
-
-        return self.sampler.filter(filtered_urls)
+        return self.sampler.sample(filtered_urls)

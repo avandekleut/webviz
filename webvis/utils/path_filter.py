@@ -11,6 +11,9 @@ class PathFilter:
     def visit(self, url):
         self.seen.append(url)
 
+    def should_allow(self, url):
+        return not self.should_ignore(url)
+
     def should_ignore(self, url):
         if url in self.seen:
             return True
