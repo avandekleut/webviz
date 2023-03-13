@@ -1,7 +1,7 @@
 import scrapy
 
 from webvis.items import WebvisItem
-from webvis.utils.path_filter import PathFilter
+from webvis.utils.crawling.wikipedia_path_filter import WikipediaPathFilter
 from webvis.utils.path_sampler import PathSampler
 from webvis.utils.wikipedia_parser import WikipediaParser
 
@@ -19,18 +19,6 @@ class WikipediaSpider(scrapy.Spider):
         'CLOSESPIDER_ITEMCOUNT': 100
     }
 
-    allowed_paths = [
-        "https://en.wikipedia.org/wiki/*",
-    ]
-
-    ignore_paths = [
-        # discussion posts etc
-        "https://en.wikipedia.org/wiki/*:*",
-
-        # keep search local, main page links to random
-        "https://en.wikipedia.org/wiki/Main_Page"
-    ]
-
     def __init__(self, name=None, start_url=None,
                  branching_factor=4, **kwargs):
         super().__init__(name, **kwargs)
@@ -41,7 +29,7 @@ class WikipediaSpider(scrapy.Spider):
 
         self.start_urls = [start_url] if start_url else self.start_urls
 
-        self.filter = PathFilter(self.allowed_paths, self.ignore_paths)
+        self.filter = WikipediaPathFilter()
         self.sampler = PathSampler(branching_factor)
 
     def parse(self, response):
