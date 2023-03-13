@@ -8,6 +8,13 @@ from networkx.algorithms.community.centrality import girvan_newman
 
 
 class NetworkHelper:
+    @classmethod
+    def from_nx_cache(cls, name: str):
+        filename = cls.generate_nx_filename(name)
+        net = cls()
+        net.load_nx(filename)
+        return net
+
     def __init__(self):
         self.nx = nx.Graph()
 
@@ -20,8 +27,9 @@ class NetworkHelper:
         """
         self.pretty()
         self.cluster(groups)
-        self.export_pyvis(name)
-        self.export_nx(name)
+        self.export_pyvis(self.generate_pyvis_filename(name, groups))
+        # self.export_pyvis('out.html')
+        self.save_nx(self.generate_nx_filename(name))
 
     def pretty(self):
         """
@@ -30,30 +38,21 @@ class NetworkHelper:
         """
         self._update_node_sizes()
 
-    def export_nx(self, name: str):
-        filename = self.get_nx_filename(name)
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
+    def save_nx(self, filename: str):
+        print(f'save_nx: filename={filename}')
+        self._create_missing_folders(filename)
         pickle.dump(self.nx, open(filename, 'wb'))
 
-    def load_nx(self, name: str):
-        filename = self.get_nx_filename(name)
+    def load_nx(self, filename: str):
+        print(f'load_nx: filename={filename}')
         self.nx = pickle.load(open(filename, 'rb'))
 
-    @classmethod
-    def from_cache(cls, name: str):
-        net = cls()
-        net.load_nx(name)
-        return net
-
-    @classmethod
-    def get_nx_filename(cls, name, dir="out"):
-        filename = name + '.nx'
-        return os.path.join(dir, filename)
-
-    def export_pyvis(self, name: str):
-        filename = name + '.html'
+    def export_pyvis(self, filename: str):
+        print(f'export_pyvis: filename={filename}')
+        self._create_missing_folders(filename)
         net = Network(
-            select_menu=True
+            select_menu=True,
+            cdn_resources='remote'
         )
         net.from_nx(self.nx)
         net.save_graph(filename)
@@ -61,6 +60,24 @@ class NetworkHelper:
     def cluster(self, num_clusters: int):
         communities = self._get_clusters(num_clusters)
         self._update_node_group_membership_by_community(communities)
+
+    @classmethod
+    def generate_nx_filename(cls, name: str, dir="out"):
+        filename = name + '.nx'
+        return os.path.join(dir, filename)
+
+    @classmethod
+    def generate_pyvis_filename(cls, name: str, groups: int, dir="out"):
+        """
+        creates <dir>/<name>/<groups>.html
+        """
+        filename = str(groups) + '.html'
+        return os.path.join(dir, name, filename)
+
+    def _create_missing_folders(self, filename):
+        dirname = os.path.dirname(filename)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
 
     def _update_node_sizes(self):
         for node in self.nx.nodes:

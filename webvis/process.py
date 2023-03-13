@@ -7,7 +7,7 @@ from webvis.utils.network import NetworkHelper
 
 def run_crawler_process(
     start_url='https://en.wikipedia.org/wiki/Functor',
-    network_groups=4,
+    network_groups=7,
     branching_factor=4
 ):
     name = NameGenerator.from_params(
@@ -16,9 +16,9 @@ def run_crawler_process(
     )
 
     try:
+        net = NetworkHelper.from_nx_cache(name)
         print(f'cache hit: {name}')
-        net = NetworkHelper.from_cache(name)
-        net.pipeline(groups=network_groups, name='test-cache')
+        net.pipeline(groups=network_groups, name=name)
         return
 
     except Exception:
@@ -28,6 +28,7 @@ def run_crawler_process(
     # override project-level settings with params
     settings = get_project_settings()
     settings.set('NETWORK_GROUPS', network_groups)
+    settings.set('CLOSESPIDER_PAGECOUNT', 100)
 
     process = CrawlerProcess(settings)
 
@@ -41,4 +42,5 @@ def run_crawler_process(
     process.start()
 
 
-run_crawler_process()
+for network_groups in range(2, 10):
+    run_crawler_process(network_groups=network_groups)

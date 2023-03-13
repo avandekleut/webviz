@@ -9,3 +9,6 @@ https://stackoverflow.com/questions/72149484/is-there-a-way-to-save-the-rendered
 
 - clean up process.py into its own class
 - let scrapy logic be a subset of that
+- abstract serialization and loading of network class
+  - will need to do when checking S3 for results
+- look into modifying pyvis or VisJS code
