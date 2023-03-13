@@ -7,10 +7,9 @@ __pycache__/
 .pytest_cache
 
 # Generated files
-out.html
+out.*
 lib
 
 # Poetry
 requirements.txt
 .DS_Store
-out.nx

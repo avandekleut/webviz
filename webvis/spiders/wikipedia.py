@@ -4,6 +4,7 @@ import urllib
 from urllib.parse import urldefrag
 
 from webvis.items import WebvisItem
+from webvis.utils.filepath_utils import FilepathUtils
 from webvis.utils.path_filter import PathFilter
 from webvis.utils.path_sampler import PathSampler
 from webvis.utils.wikipedia_parser import WikipediaParser
@@ -34,8 +35,14 @@ class WikipediaSpider(scrapy.Spider):
         "https://en.wikipedia.org/wiki/Main_Page"
     ]
 
-    def __init__(self, name=None, start_url=None, branching_factor=4, **kwargs):
+    def __init__(self, name=None, start_url=None, branching_factor=4, filepath='out', **kwargs):
         super().__init__(name, **kwargs)
+
+        self.name = name
+        self.start_url = start_url
+        self.branching_factor = branching_factor
+        self.filepath = filepath
+
         self.start_urls = [start_url] if start_url else self.start_urls
 
         self.filter = PathFilter(self.allowed_paths, self.ignore_paths)
@@ -48,12 +55,12 @@ class WikipediaSpider(scrapy.Spider):
 
         urls = self.filter_urls(parsed.get_urls())
 
-        source = parsed.get_title()
+        source = parsed.get_title_from_url()
 
         for url in urls:
             yield scrapy.Request(url, callback=self.parse)
 
-            dest = parsed.get_title(url)
+            dest = parsed.get_title_from_url(url)
 
             item = WebvisItem()
             item['source'] = source

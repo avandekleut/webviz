@@ -1,3 +1,4 @@
+import pickle
 import networkx as nx
 from networkx.algorithms.community.centrality import girvan_newman
 
@@ -20,14 +21,17 @@ class PyVisPipeline:
         # Get settings e.g. from command line like -S NETWORK_GROUPS=8
         settings = crawler.settings
         network_groups = settings.getint('NETWORK_GROUPS')
+        filepath = settings.get('FILEPATH')
 
-        return cls(network_groups)
+        return cls(network_groups, filepath)
 
-    def __init__(self, network_groups: int):
+    def __init__(self, network_groups: int, filepath: str):
         self.net = NetworkHelper()
 
-        self.count = 0
         self.network_groups = network_groups
+        self.filepath = filepath
+
+        self.count = 0
 
         print(self.__dict__)
 
@@ -35,7 +39,8 @@ class PyVisPipeline:
         pass
 
     def close_spider(self, spider: WikipediaSpider):
-        self.net.pipeline()
+        self.net.pipeline(filepath=spider.filepath)
+
         print(f'Finished with {self.count} nodes.')
 
     def process_item(self, item: WebvisItem, spider: WikipediaSpider):

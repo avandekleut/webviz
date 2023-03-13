@@ -1,9 +1,5 @@
 import urllib
 from urllib.parse import urldefrag
-from pyvis.network import Network
-
-import networkx as nx
-from networkx.algorithms.community.centrality import girvan_newman
 
 
 class WikipediaParser:
@@ -21,7 +17,7 @@ class WikipediaParser:
         unfragmented = urldefrag(url)[0]  # remove anchors, etc
         return unfragmented
 
-    def get_title(self, url=None):
+    def get_title_from_url(self, url=None):
         url = url or self.url
 
         wiki_path = url.split("/wiki/")[-1]

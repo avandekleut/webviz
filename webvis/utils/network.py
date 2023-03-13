@@ -20,6 +20,7 @@ class NetworkHelper:
         self.pretty()
         self.cluster(groups)
         self.export_pyvis(f'{filepath}.html')
+        self.export_nx(f'{filepath}.nx')
 
     def pretty(self):
         """
@@ -28,7 +29,19 @@ class NetworkHelper:
         """
         self._update_node_sizes()
 
-    def export_pyvis(self, filename='out.html'):
+    def export_nx(self, filename: str):
+        pickle.dump(self.nx, open(filename, 'wb'))
+
+    def load_nx(self, filename: str):
+        self.nx = pickle.load(open(filename, 'rb'))
+
+    @classmethod
+    def from_cache(cls, filename: str):
+        net = cls()
+        net.load_nx(filename)
+        return net
+
+    def export_pyvis(self, filename: str):
         net = Network(
             # directed=True, # interesting but distracting
             select_menu=True
@@ -39,12 +52,6 @@ class NetworkHelper:
     def cluster(self, num_clusters: int):
         communities = self._get_clusters(num_clusters)
         self._update_node_group_membership_by_community(communities)
-
-    def save(self, filename: str):
-        pickle.dump(self.nx, open(filename, 'wb'))
-
-    def load(self, filename: str):
-        self.nx = pickle.load(open(filename, 'rb'))
 
     def _update_node_sizes(self):
         for node in self.nx.nodes:
