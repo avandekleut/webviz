@@ -19,8 +19,6 @@ class Clusterizer:
             try:
                 clusters = next(cluster_generator)
                 clusters = map(list, clusters)
-
-                self.cluster_cache[iter] = clusters
             except StopIteration:
                 pass
 

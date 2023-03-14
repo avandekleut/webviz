@@ -1,49 +1,31 @@
 from networkx import Graph
-from networkx.algorithms.community.centrality import girvan_newman
 
 from webvis.items import WebvisItem
-
-from scrapy.crawler import CrawlerProcess
 
 from webvis.spiders.wikipedia import WikipediaSpider
 from webvis.utils.network.pipeline import Pipeline
 
+import logging
+
 
 class PyVisPipeline:
-    @classmethod
-    def from_crawler(cls, crawler: CrawlerProcess):
-        """
-        instantiate this pipeline given a crawler reference. The crawler has
-        access to the current settings which can be used to configure this
-        pipeline.
-        """
-        # Get settings e.g. from command line like -S NETWORK_GROUPS=8
-        settings = crawler.settings
-        network_groups = settings.getint('NETWORK_GROUPS')
-
-        return cls(network_groups,)
-
-    def __init__(self, network_groups: int):
-        self.net = Graph()
-
-        self.network_groups = network_groups
-
-        self.count = 0
-
-        print(self.__dict__)
+    def __init__(self):
+        self.network = Graph()
+        self.logger = logging.getLogger('PyVisPipeline')
 
     def open_spider(self, spider: WikipediaSpider):
+        self.logger.debug('open_spider')
         pass
 
     def close_spider(self, spider: WikipediaSpider):
+        self.logger.debug('close_spider')
+        self.logger.debug(f'total nodes: {len(self.network.nodes)}')
         for num_clusters in range(10, 1, -1):
-            Pipeline(self.net).run(num_clusters, name=f'out_{num_clusters}')
-
-        print(f'Finished with {self.count} nodes.')
+            self.logger.debug(f'Running pipeline {num_clusters}')
+            Pipeline(self.network).run(
+                num_clusters, name=f'out_{num_clusters}')
 
     def process_item(self, item: WebvisItem, spider: WikipediaSpider):
-        self.count += 1
-
-        self.net.add_edge(item['source'], item['dest'])
+        self.network.add_edge(item['source'], item['dest'])
 
         return item

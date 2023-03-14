@@ -5,13 +5,10 @@ from webvis.spiders.wikipedia import WikipediaSpider
 
 def run_crawler_process(
     start_url='https://en.wikipedia.org/wiki/Functor',
-    network_groups=7,
     branching_factor=4
 ):
     # override project-level settings with params
     settings = get_project_settings()
-    settings.set('NETWORK_GROUPS', network_groups)
-    settings.set('CLOSESPIDER_PAGECOUNT', 100)
 
     process = CrawlerProcess(settings)
 
@@ -25,4 +22,4 @@ def run_crawler_process(
     process.start()
 
 
-run_crawler_process(network_groups=6)
+run_crawler_process()
