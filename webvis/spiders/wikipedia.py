@@ -1,10 +1,9 @@
-import re
 import scrapy
-import urllib
-
-from urllib.parse import urldefrag
 
 from webvis.items import WebvisItem
+from webvis.utils.crawling.wikipedia_path_filter import WikipediaPathFilter
+from webvis.utils.crawling.path_sampler import PathSampler
+from webvis.utils.parsing.wikipedia_parser import WikipediaParser
 
 
 class WikipediaSpider(scrapy.Spider):
@@ -15,37 +14,33 @@ class WikipediaSpider(scrapy.Spider):
     ]
 
     custom_settings = {
-        # NOTE: Generally speaking this will generate more than 100 results.
-        # In experiments it returned up to 200 results.
         'CLOSESPIDER_ITEMCOUNT': 100
     }
 
-    allowed_paths = [
-        "https://en.wikipedia.org/wiki/*",
-    ]
-
-    ignore_paths = [
-        # discussion posts etc
-        "https://en.wikipedia.org/wiki/*:*",
-
-        # keep search local, main page links to random
-        "https://en.wikipedia.org/wiki/Main_Page"
-    ]
-
-    def __init__(self, name=None, start_url=None, branching_factor=4, **kwargs):
+    def __init__(self, name=None, start_url=None,
+                 branching_factor=4, **kwargs):
         super().__init__(name, **kwargs)
+
+        self.name = name
+        self.start_url = start_url
+        self.branching_factor = branching_factor
+
         self.start_urls = [start_url] if start_url else self.start_urls
-        self.branching_factor = int(branching_factor)
+
+        self.filter = WikipediaPathFilter()
+        self.sampler = PathSampler(branching_factor)
 
     def parse(self, response):
-        source = self.get_wiki_title_from_url(response.url)
+        self.filter.visit(response.url)
 
-        outgoing_links = self.get_next_urls(response)
+        parsed = WikipediaParser(response)
+        source = parsed.get_title_from_url()
 
-        for url in outgoing_links:
+        urls = self.get_next_urls(parsed.get_urls())
+        for url in urls:
             yield scrapy.Request(url, callback=self.parse)
 
-            dest = self.get_wiki_title_from_url(url)
+            dest = parsed.get_title_from_url(url)
 
             item = WebvisItem()
             item['source'] = source
@@ -53,80 +48,9 @@ class WikipediaSpider(scrapy.Spider):
 
             yield item
 
-    def get_wiki_title_from_url(self, url):
-        wiki_path = url.split("/wiki/")[-1]
+    def get_next_urls(self, urls):
+        filtered_urls = filter(self.filter.should_allow, urls)
 
-        decoded = urllib.parse.unquote(
-            wiki_path, encoding='utf-8', errors='replace')
+        sampled_urls = self.sampler.sample(filtered_urls)
 
-        pretty = decoded.replace("_", " ")
-
-        return pretty
-
-    def select_subset(self, urls: list):
-        return urls[:self.branching_factor]
-
-    def get_outgoing_urls(self, response):
-        return response.xpath('//a/@href').getall()
-
-    def get_next_urls(self, response):
-        wiki_urls = self.get_targeted_urls(response)
-
-        unique_urls = self.get_unique(wiki_urls)
-
-        subset = self.select_subset(unique_urls)
-
-        return subset
-
-    def get_targeted_urls(self, response):
-        def should_ignore(url):
-            if url == response.url:
-                return True
-
-            if self.should_ignore_path(url):
-                return True
-
-            if not self.should_allow_path(url):
-                return True
-
-        urls = []
-
-        for url in self.get_outgoing_urls(response):
-            url = self.get_full_url(response, url)
-
-            if should_ignore(url):
-                continue
-
-            urls.append(url)
-
-        return urls
-
-    def assert_at_most_one(self, *args):
-        booled = [bool(x) for x in list(args)]
-        truthy = [x for x in booled if x]
-        return len(truthy) <= 1
-
-    def get_unique(self, arr):
-        return list(dict.fromkeys(arr))
-
-    def get_full_url(self, response, href):
-        url = response.urljoin(href)
-        unfragmented = urldefrag(url)[0]  # remove anchors, etc
-        return unfragmented
-
-    def should_ignore_path(self, path):
-        return self.filter_paths_by_pattern(path, self.ignore_paths)
-
-    def should_allow_path(self, path):
-        return self.filter_paths_by_pattern(path, self.allowed_paths)
-
-    def filter_paths_by_pattern(self, path, patterns):
-        for pattern in patterns:
-            regular_expression = self.wildcard_to_regular_expression(pattern)
-            if re.match(regular_expression, path):
-                return True
-
-        return False
-
-    def wildcard_to_regular_expression(self, path):
-        return re.escape(path).replace('\*', '.+')
+        return sampled_urls

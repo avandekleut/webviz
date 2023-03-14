@@ -37,7 +37,7 @@ scrapy crawl wikipedia
 Pass crawler settings with the `-s` flag, like
 
 ```
-scrapy crawl wikipedia -s CLOSESPIDER_ITEMCOUNT=50 -s NETWORK_GROUPS=4
+scrapy crawl wikipedia -s CLOSESPIDER_ITEMCOUNT=50
 ```
 
 Project-level crawler settings can be found in `webvis/settings.py`.

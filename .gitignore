@@ -7,7 +7,8 @@ __pycache__/
 .pytest_cache
 
 # Generated files
-out.html
+out*
 
 # Poetry
 requirements.txt
+.DS_Store
