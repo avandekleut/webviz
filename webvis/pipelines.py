@@ -36,7 +36,8 @@ class PyVisPipeline:
         pass
 
     def close_spider(self, spider: WikipediaSpider):
-        Pipeline(self.net).run()
+        for num_clusters in range(10, 1, -1):
+            Pipeline(self.net).run(num_clusters, name=f'out_{num_clusters}')
 
         print(f'Finished with {self.count} nodes.')
 
