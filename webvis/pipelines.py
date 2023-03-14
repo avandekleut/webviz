@@ -24,7 +24,7 @@ class PyVisPipeline:
         for num_clusters in range(1, 10):
             self.logger.debug(f'Running pipeline {num_clusters}')
             Pipeline(self.network).run(
-                num_clusters, name=f'out_{num_clusters}')
+                num_clusters, name=f'out/{num_clusters}')
 
     def process_item(self, item: WebvisItem, spider: WikipediaSpider):
         self.network.add_edge(item['source'], item['dest'])
