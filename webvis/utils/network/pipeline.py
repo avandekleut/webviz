@@ -1,4 +1,3 @@
-from networkx.algorithms.community.centrality import girvan_newman
 from networkx import Graph
 
 
