@@ -2,7 +2,7 @@ import scrapy
 
 from webvis.items import WebvisItem
 from webvis.utils.crawling.wikipedia_path_filter import WikipediaPathFilter
-from webvis.utils.path_sampler import PathSampler
+from webvis.utils.crawling.path_sampler import PathSampler
 from webvis.utils.wikipedia_parser import WikipediaParser
 
 

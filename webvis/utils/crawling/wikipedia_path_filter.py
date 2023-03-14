@@ -1,5 +1,3 @@
-import re
-
 from webvis.utils.crawling.path_filter import PathFilter
 
 
