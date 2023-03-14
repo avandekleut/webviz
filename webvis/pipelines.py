@@ -20,7 +20,8 @@ class PyVisPipeline:
     def close_spider(self, spider: WikipediaSpider):
         self.logger.debug('close_spider')
         self.logger.debug(f'total nodes: {len(self.network.nodes)}')
-        for num_clusters in range(10, 1, -1):
+
+        for num_clusters in range(1, 10):
             self.logger.debug(f'Running pipeline {num_clusters}')
             Pipeline(self.network).run(
                 num_clusters, name=f'out_{num_clusters}')
