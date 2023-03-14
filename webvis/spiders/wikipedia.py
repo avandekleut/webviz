@@ -3,7 +3,7 @@ import scrapy
 from webvis.items import WebvisItem
 from webvis.utils.crawling.wikipedia_path_filter import WikipediaPathFilter
 from webvis.utils.crawling.path_sampler import PathSampler
-from webvis.utils.wikipedia_parser import WikipediaParser
+from webvis.utils.parsing.wikipedia_parser import WikipediaParser
 
 
 class WikipediaSpider(scrapy.Spider):
@@ -14,8 +14,6 @@ class WikipediaSpider(scrapy.Spider):
     ]
 
     custom_settings = {
-        # NOTE: Generally speaking this will generate more than 100 results.
-        # In experiments it returned up to 200 results.
         'CLOSESPIDER_ITEMCOUNT': 100
     }
 
@@ -53,4 +51,6 @@ class WikipediaSpider(scrapy.Spider):
     def get_next_urls(self, urls):
         filtered_urls = filter(self.filter.should_allow, urls)
 
-        return self.sampler.sample(filtered_urls)
+        sampled_urls = self.sampler.sample(filtered_urls)
+
+        return sampled_urls
